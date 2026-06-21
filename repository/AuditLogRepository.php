@@ -1,7 +1,7 @@
 <?php
 require_once 'config/Database.php';
 
-class AuditLogRepository{
+class AuditLogRepository implements AuditLogRepositoryInterface{
     private PDO $db;
 
     public function __construct(){

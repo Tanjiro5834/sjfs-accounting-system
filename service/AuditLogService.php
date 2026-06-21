@@ -1,6 +1,6 @@
 <?php
 require_once 'repository/AuditLogRepository.php';
-require_once 'models/AuditLog.php';
+require_once 'entity/AuditLog.php';
 
 class AuditLogService {
     private AuditLogRepository $auditRepo;

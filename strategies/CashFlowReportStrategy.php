@@ -1,6 +1,5 @@
 <?php
 require_once 'interfaces/ReportStrategyInterface.php';
-require_once 'interfaces/SourceRepositoryInterface.php';
 require_once 'interfaces/PayableRepositoryInterface.php';
 
 class CashFlowReportStrategy implements ReportStrategyInterface {

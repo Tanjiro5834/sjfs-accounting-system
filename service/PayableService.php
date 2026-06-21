@@ -1,5 +1,5 @@
 <?php
-require_once 'repositories/PayableRepository.php';
+require_once 'repository/PayableRepository.php';
 require_once 'dto/request/PayableRequest.php';
 require_once 'dto/response/PayableResponse.php';
 

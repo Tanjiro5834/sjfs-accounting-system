@@ -1,7 +1,7 @@
 <?php
 require_once 'config/Database.php';
 
-class BankAccountRepository {
+class BankAccountRepository implements BankAccountRepositoryInterface {
     private PDO $db;
 
     public function __construct() {

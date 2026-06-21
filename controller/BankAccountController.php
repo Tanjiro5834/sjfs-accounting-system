@@ -1,8 +1,4 @@
 <?php
-require_once __DIR__ . '/../service/BankAccountService.php';
-require_once __DIR__ . '/../repository/BankAccountRepository.php';
-require_once __DIR__ . '/../middleware/auth.php';
-
 class BankAccountController {
     private BankAccountService $bankService;
 

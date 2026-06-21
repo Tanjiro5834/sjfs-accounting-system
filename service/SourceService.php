@@ -1,5 +1,5 @@
 <?php
-require_once 'repositories/SourceRepository.php';
+require_once 'repository/SourceRepository.php';
 require_once 'dto/request/SourceRequest.php';
 require_once 'dto/response/SourceResponse.php';
 

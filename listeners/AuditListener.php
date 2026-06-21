@@ -1,7 +1,7 @@
 <?php
 require_once 'interfaces/EventListenerInterface.php';
 require_once 'interfaces/AuditLogRepositoryInterface.php';
-require_once 'models/AuditLog.php';
+require_once 'entity/AuditLog.php';
 
 class AuditListener implements EventListenerInterface {
     private AuditLogRepositoryInterface $auditRepo;

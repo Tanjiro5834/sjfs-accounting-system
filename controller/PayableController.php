@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../servicesPayableService.php';
+require_once __DIR__ . '/../service/PayableService.php';
 require_once __DIR__ . '/../repository/PayableRepository.php';
 require_once __DIR__ . '/../middleware/auth.php';
 

@@ -1,5 +1,5 @@
 <?php
-class PayableRepository {
+class PayableRepository implements PayableRepositoryInterface {
     private PDO $db;
 
     public function __construct() {
@@ -18,11 +18,11 @@ class PayableRepository {
         return $stmt->fetchAll();
     }
 
-    public function findById(int $id): ?Payable {
+    public function findById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT * FROM payables WHERE id = ?");
         $stmt->execute([$id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row !== false ? $row : null;
     }
 
     public function findByDateRange(string $dateFrom, string $dateTo): array {
@@ -61,22 +61,23 @@ class PayableRepository {
         return $stmt->fetchAll();
     }
 
-    public function findByCheckNumber(string $checkNumber): ?Payable {
-        $stmt = $this->db->prepare("
-            SELECT * FROM payables WHERE check_number = ?
-        ");
+    public function findByCheckNumber(string $checkNumber): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM payables WHERE check_number = ?");
         $stmt->execute([$checkNumber]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row !== false ? $row : null;
     }
 
     public function save(Payable $payable): int {
         try{
             if(empty($payable->payee) || empty($payable->check_number) 
-                || empty($payable->bank_account_id) 
-                || empty($payable->amount) || empty($payable->transaction_date) 
+                || empty($payable->bank_account_id) || empty($payable->transaction_date) 
                 || empty($payable->remarks) || empty($payable->created_by)){
                 throw new InvalidArgumentException("Missing required fields");
+            }
+
+            if($payable->amount <= 0){
+                throw new InvalidArgumentException("Amount must be positive");
             }
 
             $this->db->beginTransaction();

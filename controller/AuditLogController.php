@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../services/AuditLogService.php';
+require_once __DIR__ . '/../service/AuditLogService.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
 class AuditController {

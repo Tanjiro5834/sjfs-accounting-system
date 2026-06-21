@@ -1,4 +1,5 @@
 /* ─── TOKENS ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@100;300;400;700;900&display=swap');
 :root {
   --bg:         #F7F6F3;
   --surface:    #FFFFFF;
@@ -29,8 +30,9 @@
   --sidebar-w:  220px;
   --topbar-h:   56px;
   --transition: 0.18s ease;
-  --font:       'Inter', sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --font:         'Lato', sans-serif;
+  --font-heading: 'Inter', sans-serif;
+  --font-mono:    'Lato', monospace;
 }
 
 [data-theme="dark"] {
@@ -73,6 +75,10 @@ body {
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; }
 input, select, textarea, button { font-family: var(--font); }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
 
 /* ─── LAYOUT ─────────────────────────────────────────────── */
 .app-layout {

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../interfaces/UserRepositoryInterface.php';
-require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../entity/User.php';
 
 class UserRepository implements UserRepositoryInterface {
     private PDO $db;
