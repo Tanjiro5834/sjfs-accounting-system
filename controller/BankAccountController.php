@@ -50,7 +50,7 @@ class BankAccountController {
         } catch (InvalidArgumentException $e) {
             $this->jsonError($e->getMessage());
         } catch (Exception $e) {
-            $this->jsonError('Failed to add bank account.');
+            $this->jsonError($e->getMessage());
         }
     }
 
@@ -121,14 +121,14 @@ class BankAccountController {
 
     private function jsonSuccess(array $data = []): void {
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, ...$data]);
+        echo json_encode(array_merge(['success' => true], $data));
         exit;
     }
 
     private function jsonError(string $message, int $code = 400): void {
         http_response_code($code);
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => $message]);
+        echo json_encode(array_merge(['success' => false], ['message' => $message]));
         exit;
     }
 

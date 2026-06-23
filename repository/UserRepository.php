@@ -45,11 +45,6 @@ class UserRepository implements UserRepositoryInterface {
     }
 
     public function save(User $user): int {
-        if (empty($user->name) || empty($user->email)
-            || empty($user->password) || empty($user->role)) {
-            throw new InvalidArgumentException("Missing required fields");
-        }
-
         try {
             $this->db->beginTransaction();
 
@@ -70,7 +65,7 @@ class UserRepository implements UserRepositoryInterface {
             return $id;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -104,7 +99,7 @@ class UserRepository implements UserRepositoryInterface {
             return $result;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -119,7 +114,7 @@ class UserRepository implements UserRepositoryInterface {
             $this->db->commit();
             return $result;
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }

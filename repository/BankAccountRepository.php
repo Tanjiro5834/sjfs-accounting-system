@@ -36,10 +36,6 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
 
     public function save(BankAccount $bankAccount): int {
         try {
-            if (empty($bankAccount->account_name) || empty($bankAccount->bank_name)) {
-                throw new InvalidArgumentException("Missing required fields");
-            }
-
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare("
@@ -60,7 +56,7 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
             return $id;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -95,7 +91,7 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
             return $result;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -110,7 +106,7 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
             $this->db->commit();
             return $result;
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }

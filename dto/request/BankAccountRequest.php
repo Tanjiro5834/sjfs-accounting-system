@@ -11,7 +11,7 @@ class BankAccountRequest {
         $this->bank_name       = trim($data['bank_name']);
         $this->account_number  = $data['account_number'] ?? null;
         $this->opening_balance = (float) ($data['opening_balance'] ?? 0.00);
-        $this->campus_id       = isset($data['campus_id']) ? (int) $data['campus_id'] : null;
+        $this->campus_id = !empty($data['campus_id']) ? (int) $data['campus_id'] : null;
     }
 
     public function validate(): array {

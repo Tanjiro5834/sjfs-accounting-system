@@ -79,12 +79,6 @@ class SourceRepository implements SourceRepositoryInterface {
     }
 
     public function save(Source $source): int {
-        if (empty($source->campus_id) || empty($source->collection_type_id) ||
-            empty($source->bank_account_id) || empty($source->amount) ||
-            empty($source->transaction_date) || empty($source->created_by)) {
-            throw new InvalidArgumentException("Missing required fields");
-        }
-
         try {
             $this->db->beginTransaction();
 
@@ -109,7 +103,7 @@ class SourceRepository implements SourceRepositoryInterface {
             return $id;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -153,7 +147,7 @@ class SourceRepository implements SourceRepositoryInterface {
             return true;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -167,7 +161,7 @@ class SourceRepository implements SourceRepositoryInterface {
             $this->db->commit();
             return $result;
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }

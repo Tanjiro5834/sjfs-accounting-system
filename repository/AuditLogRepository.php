@@ -71,7 +71,7 @@ class AuditLogRepository implements AuditLogRepositoryInterface{
             $this->db->commit();
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw new RuntimeException("Audit log failed: " . $e->getMessage(), 0, $e);
         }
     }

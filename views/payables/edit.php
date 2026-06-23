@@ -1,10 +1,10 @@
 <?php
+// $payable is a PayableResponse object — passed from PayableController::edit()
 $currentPage   = 'payables';
-$currentAction = 'create';
+$currentAction = 'edit';
 $user          = currentUser();
 $campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 
-// Load bank accounts for the dropdown
 $bankRepo     = new BankAccountRepository();
 $bankAccounts = $bankRepo->findAll();
 
@@ -25,7 +25,7 @@ $navItems = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Payable — SJFS</title>
+<title>Edit Payable — SJFS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -92,7 +92,7 @@ $navItems = [
           <i class="ti ti-chevron-right"></i>
           <a href="/sjfs/?page=payables" style="color:var(--muted);text-decoration:none">Cash out</a>
           <i class="ti ti-chevron-right"></i>
-          <span class="breadcrumb-current">Add entry</span>
+          <span class="breadcrumb-current">Edit entry</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -104,8 +104,8 @@ $navItems = [
 
       <div class="page-header animate-in">
         <div class="page-header-left">
-          <h1>Add payable entry</h1>
-          <p>Record a new cash disbursement</p>
+          <h1>Edit payable entry</h1>
+          <p>Updating record #<?= (int) $payable->id ?></p>
         </div>
         <div class="page-header-right">
           <a href="/sjfs/?page=payables" class="btn"><i class="ti ti-arrow-left"></i> Back</a>
@@ -122,19 +122,25 @@ $navItems = [
         <div style="padding:20px 24px">
           <div id="form-error" class="alert alert-danger" style="display:none;margin-bottom:16px"></div>
 
+          <!-- Hidden ID -->
+          <input type="hidden" id="record-id" value="<?= (int) $payable->id ?>">
+
           <div class="form-group">
             <label>Payee <span style="color:var(--danger)">*</span></label>
-            <input type="text" id="payee" class="form-control" placeholder="e.g. Globe Telecom" autocomplete="off">
+            <input type="text" id="payee" class="form-control"
+              value="<?= htmlspecialchars($payable->payee) ?>" autocomplete="off">
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group">
               <label>Check number</label>
-              <input type="text" id="check_number" class="form-control" placeholder="e.g. 0012345" autocomplete="off">
+              <input type="text" id="check_number" class="form-control"
+                value="<?= htmlspecialchars($payable->check_number ?? '') ?>" autocomplete="off">
             </div>
             <div class="form-group">
               <label>Amount <span style="color:var(--danger)">*</span></label>
-              <input type="number" id="amount" class="form-control" placeholder="0.00" min="0.01" step="0.01">
+              <input type="number" id="amount" class="form-control"
+                value="<?= htmlspecialchars($payable->amount) ?>" min="0.01" step="0.01">
             </div>
           </div>
 
@@ -144,7 +150,8 @@ $navItems = [
               <select id="bank_account_id" class="form-control">
                 <option value="">— Select bank —</option>
                 <?php foreach ($bankAccounts as $bank): ?>
-                  <option value="<?= $bank['id'] ?>">
+                  <option value="<?= $bank['id'] ?>"
+                    <?= $bank['id'] == $payable->bank_account_id ? 'selected' : '' ?>>
                     <?= htmlspecialchars($bank['account_name']) ?>
                   </option>
                 <?php endforeach; ?>
@@ -152,19 +159,20 @@ $navItems = [
             </div>
             <div class="form-group">
               <label>Transaction date <span style="color:var(--danger)">*</span></label>
-              <input type="date" id="transaction_date" class="form-control" value="<?= date('Y-m-d') ?>">
+              <input type="date" id="transaction_date" class="form-control"
+                value="<?= htmlspecialchars($payable->transaction_date) ?>">
             </div>
           </div>
 
           <div class="form-group">
             <label>Remarks</label>
-            <textarea id="remarks" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+            <textarea id="remarks" class="form-control" rows="3"><?= htmlspecialchars($payable->remarks ?? '') ?></textarea>
           </div>
 
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
             <a href="/sjfs/?page=payables" class="btn">Cancel</a>
-            <button class="btn btn-primary" onclick="submitCreate(this)">
-              <i class="ti ti-check"></i> Save entry
+            <button class="btn btn-primary" onclick="submitUpdate(this)">
+              <i class="ti ti-check"></i> Save changes
             </button>
           </div>
         </div>
@@ -177,7 +185,8 @@ $navItems = [
 <div class="toast-container" id="toast-container"></div>
 <script src="/sjfs/public/js/app.js"></script>
 <script>
-function submitCreate(btn) {
+function submitUpdate(btn) {
+    const id              = document.getElementById('record-id').value;
     const payee           = document.getElementById('payee').value.trim();
     const check_number    = document.getElementById('check_number').value.trim();
     const amount          = document.getElementById('amount').value.trim();
@@ -197,10 +206,10 @@ function submitCreate(btn) {
     btn.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
 
     const body = new URLSearchParams({
-        payee, check_number, amount, bank_account_id, transaction_date, remarks
+        id, payee, check_number, amount, bank_account_id, transaction_date, remarks
     });
 
-    fetch('/sjfs/?page=payables&action=store', {
+    fetch('/sjfs/?page=payables&action=update', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: body.toString()
@@ -208,18 +217,18 @@ function submitCreate(btn) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Payable entry saved.', 'success');
+            showToast('Payable entry updated.', 'success');
             setTimeout(() => window.location.href = '/sjfs/?page=payables', 800);
         } else {
-            showError(data.message || 'Failed to save entry.');
+            showError(data.message || 'Failed to update entry.');
             btn.disabled = false;
-            btn.innerHTML = '<i class="ti ti-check"></i> Save entry';
+            btn.innerHTML = '<i class="ti ti-check"></i> Save changes';
         }
     })
     .catch(() => {
         showError('Network error. Please try again.');
         btn.disabled = false;
-        btn.innerHTML = '<i class="ti ti-check"></i> Save entry';
+        btn.innerHTML = '<i class="ti ti-check"></i> Save changes';
     });
 
     function showError(msg) {

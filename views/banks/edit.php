@@ -1,13 +1,9 @@
 <?php
-$currentPage   = 'payables';
-$currentAction = 'create';
+// $account is a BankAccountResponse object — passed from BankAccountController::edit()
+$currentPage   = 'banks';
+$currentAction = 'edit';
 $user          = currentUser();
 $campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
-
-// Load bank accounts for the dropdown
-$bankRepo     = new BankAccountRepository();
-$bankAccounts = $bankRepo->findAll();
-
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
@@ -25,7 +21,7 @@ $navItems = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Payable — SJFS</title>
+<title>Edit Bank Account — SJFS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -90,9 +86,9 @@ $navItems = [
         <div class="breadcrumb">
           <span class="breadcrumb-home">SJFS</span>
           <i class="ti ti-chevron-right"></i>
-          <a href="/sjfs/?page=payables" style="color:var(--muted);text-decoration:none">Cash out</a>
+          <a href="/sjfs/?page=banks" style="color:var(--muted);text-decoration:none">Bank accounts</a>
           <i class="ti ti-chevron-right"></i>
-          <span class="breadcrumb-current">Add entry</span>
+          <span class="breadcrumb-current">Edit account</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -104,67 +100,65 @@ $navItems = [
 
       <div class="page-header animate-in">
         <div class="page-header-left">
-          <h1>Add payable entry</h1>
-          <p>Record a new cash disbursement</p>
+          <h1>Edit bank account</h1>
+          <p>Updating: <?= htmlspecialchars($account->account_name) ?></p>
         </div>
         <div class="page-header-right">
-          <a href="/sjfs/?page=payables" class="btn"><i class="ti ti-arrow-left"></i> Back</a>
+          <a href="/sjfs/?page=banks" class="btn"><i class="ti ti-arrow-left"></i> Back</a>
         </div>
       </div>
 
-      <div class="card animate-in" style="max-width:640px">
+      <div class="card animate-in" style="max-width:600px">
         <div class="card-header">
           <div>
-            <div class="card-title">Payable details</div>
-            <div class="card-subtitle">All fields marked * are required</div>
+            <div class="card-title">Account details</div>
+            <div class="card-subtitle">Fields marked * are required</div>
           </div>
         </div>
         <div style="padding:20px 24px">
           <div id="form-error" class="alert alert-danger" style="display:none;margin-bottom:16px"></div>
 
-          <div class="form-group">
-            <label>Payee <span style="color:var(--danger)">*</span></label>
-            <input type="text" id="payee" class="form-control" placeholder="e.g. Globe Telecom" autocomplete="off">
+          <input type="hidden" id="record-id" value="<?= (int) $account->id ?>">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label>Account name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="account_name" class="form-control"
+                value="<?= htmlspecialchars($account->account_name) ?>" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>Bank name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="bank_name" class="form-control"
+                value="<?= htmlspecialchars($account->bank_name) ?>" autocomplete="off">
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group">
-              <label>Check number</label>
-              <input type="text" id="check_number" class="form-control" placeholder="e.g. 0012345" autocomplete="off">
+              <label>Account number</label>
+              <input type="text" id="account_number" class="form-control"
+                value="<?= htmlspecialchars($account->account_number ?? '') ?>" autocomplete="off">
             </div>
             <div class="form-group">
-              <label>Amount <span style="color:var(--danger)">*</span></label>
-              <input type="number" id="amount" class="form-control" placeholder="0.00" min="0.01" step="0.01">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="form-group">
-              <label>Bank account <span style="color:var(--danger)">*</span></label>
-              <select id="bank_account_id" class="form-control">
-                <option value="">— Select bank —</option>
-                <?php foreach ($bankAccounts as $bank): ?>
-                  <option value="<?= $bank['id'] ?>">
-                    <?= htmlspecialchars($bank['account_name']) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Transaction date <span style="color:var(--danger)">*</span></label>
-              <input type="date" id="transaction_date" class="form-control" value="<?= date('Y-m-d') ?>">
+              <label>Opening balance <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="opening_balance" class="form-control"
+                value="<?= htmlspecialchars($account->opening_balance) ?>" min="0" step="0.01">
             </div>
           </div>
 
           <div class="form-group">
-            <label>Remarks</label>
-            <textarea id="remarks" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+            <label>Campus</label>
+            <select id="campus_id" class="form-control">
+              <option value="">All campuses</option>
+              <option value="1" <?= ($account->campus_id == 1) ? 'selected' : '' ?>>Camella Campus</option>
+              <option value="2" <?= ($account->campus_id == 2) ? 'selected' : '' ?>>BNT Campus</option>
+            </select>
           </div>
 
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <a href="/sjfs/?page=payables" class="btn">Cancel</a>
-            <button class="btn btn-primary" onclick="submitCreate(this)">
-              <i class="ti ti-check"></i> Save entry
+            <a href="/sjfs/?page=banks" class="btn">Cancel</a>
+            <button class="btn btn-primary" onclick="submitUpdate(this)">
+              <i class="ti ti-check"></i> Save changes
             </button>
           </div>
         </div>
@@ -177,30 +171,30 @@ $navItems = [
 <div class="toast-container" id="toast-container"></div>
 <script src="/sjfs/public/js/app.js"></script>
 <script>
-function submitCreate(btn) {
-    const payee           = document.getElementById('payee').value.trim();
-    const check_number    = document.getElementById('check_number').value.trim();
-    const amount          = document.getElementById('amount').value.trim();
-    const bank_account_id = document.getElementById('bank_account_id').value;
-    const transaction_date = document.getElementById('transaction_date').value;
-    const remarks         = document.getElementById('remarks').value.trim();
+function submitUpdate(btn) {
+    const id              = document.getElementById('record-id').value;
+    const account_name    = document.getElementById('account_name').value.trim();
+    const bank_name       = document.getElementById('bank_name').value.trim();
+    const account_number  = document.getElementById('account_number').value.trim();
+    const opening_balance = document.getElementById('opening_balance').value.trim();
+    const campus_id       = document.getElementById('campus_id').value;
     const errBox          = document.getElementById('form-error');
 
     errBox.style.display = 'none';
 
-    if (!payee)            return showError('Payee is required.');
-    if (!amount || +amount <= 0) return showError('Amount must be greater than 0.');
-    if (!bank_account_id)  return showError('Please select a bank account.');
-    if (!transaction_date) return showError('Transaction date is required.');
+    if (!account_name) return showError('Account name is required.');
+    if (!bank_name)    return showError('Bank name is required.');
+    if (opening_balance === '' || isNaN(opening_balance) || +opening_balance < 0)
+        return showError('Opening balance must be 0 or greater.');
 
     btn.disabled = true;
     btn.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
 
     const body = new URLSearchParams({
-        payee, check_number, amount, bank_account_id, transaction_date, remarks
+        id, account_name, bank_name, account_number, opening_balance, campus_id
     });
 
-    fetch('/sjfs/?page=payables&action=store', {
+    fetch('/sjfs/?page=banks&action=update', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: body.toString()
@@ -208,18 +202,18 @@ function submitCreate(btn) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Payable entry saved.', 'success');
-            setTimeout(() => window.location.href = '/sjfs/?page=payables', 800);
+            showToast('Bank account updated.', 'success');
+            setTimeout(() => window.location.href = '/sjfs/?page=banks', 800);
         } else {
-            showError(data.message || 'Failed to save entry.');
+            showError(data.message || 'Failed to update account.');
             btn.disabled = false;
-            btn.innerHTML = '<i class="ti ti-check"></i> Save entry';
+            btn.innerHTML = '<i class="ti ti-check"></i> Save changes';
         }
     })
     .catch(() => {
         showError('Network error. Please try again.');
         btn.disabled = false;
-        btn.innerHTML = '<i class="ti ti-check"></i> Save entry';
+        btn.innerHTML = '<i class="ti ti-check"></i> Save changes';
     });
 
     function showError(msg) {

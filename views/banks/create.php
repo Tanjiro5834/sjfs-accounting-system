@@ -1,6 +1,6 @@
 <?php
 $currentPage   = 'banks';
-$currentAction = '';
+$currentAction = 'create';
 $user          = currentUser();
 $campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 $navItems = [
@@ -20,7 +20,7 @@ $navItems = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bank Accounts — SJFS</title>
+<title>Add Bank Account — SJFS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -85,7 +85,9 @@ $navItems = [
         <div class="breadcrumb">
           <span class="breadcrumb-home">SJFS</span>
           <i class="ti ti-chevron-right"></i>
-          <span class="breadcrumb-current">Bank accounts</span>
+          <a href="/sjfs/?page=banks" style="color:var(--muted);text-decoration:none">Bank accounts</a>
+          <i class="ti ti-chevron-right"></i>
+          <span class="breadcrumb-current">Add account</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -97,87 +99,62 @@ $navItems = [
 
       <div class="page-header animate-in">
         <div class="page-header-left">
-          <h1>Bank accounts</h1>
-          <p><?= count($accounts) ?> active account<?= count($accounts) !== 1 ? 's' : '' ?></p>
+          <h1>Add bank account</h1>
+          <p>Register a new bank account for transactions</p>
         </div>
         <div class="page-header-right">
-          <a href="/sjfs/?page=banks&action=create" class="btn btn-primary">
-            <i class="ti ti-plus"></i> Add account
-          </a>
+          <a href="/sjfs/?page=banks" class="btn"><i class="ti ti-arrow-left"></i> Back</a>
         </div>
       </div>
 
-      <div class="card animate-in">
+      <div class="card animate-in" style="max-width:600px">
         <div class="card-header">
           <div>
-            <div class="card-title">All bank accounts</div>
-            <div class="card-subtitle">Active accounts used for transactions</div>
+            <div class="card-title">Account details</div>
+            <div class="card-subtitle">Fields marked * are required</div>
           </div>
         </div>
+        <div style="padding:20px 24px">
+          <div id="form-error" class="alert alert-danger" style="display:none;margin-bottom:16px"></div>
 
-        <?php if (empty($accounts)): ?>
-          <div class="empty-state">
-            <i class="ti ti-building-bank"></i>
-            <h3>No bank accounts yet</h3>
-            <p>Add your first bank account to start recording transactions.</p>
-            <a href="/sjfs/?page=banks&action=create" class="btn btn-primary" style="margin-top:12px">
-              <i class="ti ti-plus"></i> Add account
-            </a>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label>Account name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="account_name" class="form-control" placeholder="e.g. Maybank-SJFS" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>Bank name <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="bank_name" class="form-control" placeholder="e.g. Maybank" autocomplete="off">
+            </div>
           </div>
-        <?php else: ?>
-          <div class="table-wrap">
-            <table id="banks-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Account name</th>
-                  <th>Bank</th>
-                  <th>Account number</th>
-                  <th>Campus</th>
-                  <th>Opening balance</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($accounts as $i => $a): ?>
-                  <tr>
-                    <td class="td-muted"><?= $i + 1 ?></td>
-                    <td><strong><?= htmlspecialchars($a->account_name) ?></strong></td>
-                    <td class="td-muted"><?= htmlspecialchars($a->bank_name) ?></td>
-                    <td class="td-mono"><?= htmlspecialchars($a->account_number ?? '—') ?></td>
-                    <td>
-                      <?php if ($a->campus_id): ?>
-                        <span class="badge badge-info"><?= $campusMap[$a->campus_id] ?? 'Unknown' ?></span>
-                      <?php else: ?>
-                        <span class="td-muted">All</span>
-                      <?php endif; ?>
-                    </td>
-                    <td class="td-mono">₱<?= number_format($a->opening_balance, 2) ?></td>
-                    <td>
-                      <span class="badge <?= $a->is_active ? 'badge-success' : 'badge-danger' ?>">
-                        <?= $a->is_active ? 'Active' : 'Inactive' ?>
-                      </span>
-                    </td>
-                    <td>
-                      <div style="display:flex;gap:4px">
-                        <a href="/sjfs/?page=banks&action=edit&id=<?= $a->id ?>" class="icon-btn" title="Edit">
-                          <i class="ti ti-edit"></i>
-                        </a>
-                        <?php if ($a->is_active): ?>
-                          <button class="icon-btn" title="Deactivate"
-                            onclick="deactivateBank(<?= $a->id ?>, '<?= htmlspecialchars($a->account_name, ENT_QUOTES) ?>')">
-                            <i class="ti ti-ban"></i>
-                          </button>
-                        <?php endif; ?>
-                      </div>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label>Account number</label>
+              <input type="text" id="account_number" class="form-control" placeholder="e.g. 1234-5678-9012" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>Opening balance <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="opening_balance" class="form-control" placeholder="0.00" min="0" step="0.01" value="0.00">
+            </div>
           </div>
-        <?php endif; ?>
+
+          <div class="form-group">
+            <label>Campus</label>
+            <select id="campus_id" class="form-control">
+              <option value="">All campuses</option>
+              <option value="1">Camella Campus</option>
+              <option value="2">BNT Campus</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+            <a href="/sjfs/?page=banks" class="btn">Cancel</a>
+            <button class="btn btn-primary" onclick="submitCreate(this)">
+              <i class="ti ti-check"></i> Save account
+            </button>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -187,10 +164,55 @@ $navItems = [
 <div class="toast-container" id="toast-container"></div>
 <script src="/sjfs/public/js/app.js"></script>
 <script>
-function deactivateBank(id, label) {
-    confirmDelete('/sjfs/?page=banks&action=deactivate', id, label, function() {
-        window.location.reload();
+function submitCreate(btn) {
+    const account_name    = document.getElementById('account_name').value.trim();
+    const bank_name       = document.getElementById('bank_name').value.trim();
+    const account_number  = document.getElementById('account_number').value.trim();
+    const opening_balance = document.getElementById('opening_balance').value.trim();
+    const campus_id       = document.getElementById('campus_id').value;
+    const errBox          = document.getElementById('form-error');
+
+    errBox.style.display = 'none';
+
+    if (!account_name) return showError('Account name is required.');
+    if (!bank_name)    return showError('Bank name is required.');
+    if (opening_balance === '' || isNaN(opening_balance) || +opening_balance < 0)
+        return showError('Opening balance must be 0 or greater.');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
+
+    const body = new URLSearchParams({
+        account_name, bank_name, account_number, opening_balance, campus_id
     });
+
+    fetch('/sjfs/?page=banks&action=store', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Bank account saved.', 'success');
+            setTimeout(() => window.location.href = '/sjfs/?page=banks', 800);
+        } else {
+            showError(data.message || 'Failed to save account.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ti ti-check"></i> Save account';
+        }
+    })
+    .catch(() => {
+        showError('Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-check"></i> Save account';
+    });
+
+    function showError(msg) {
+        errBox.textContent = msg;
+        errBox.style.display = 'block';
+        errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 </script>
 </body>

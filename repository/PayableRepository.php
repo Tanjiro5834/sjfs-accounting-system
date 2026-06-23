@@ -70,16 +70,6 @@ class PayableRepository implements PayableRepositoryInterface {
 
     public function save(Payable $payable): int {
         try{
-            if(empty($payable->payee) || empty($payable->check_number) 
-                || empty($payable->bank_account_id) || empty($payable->transaction_date) 
-                || empty($payable->remarks) || empty($payable->created_by)){
-                throw new InvalidArgumentException("Missing required fields");
-            }
-
-            if($payable->amount <= 0){
-                throw new InvalidArgumentException("Amount must be positive");
-            }
-
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare("INSERT INTO payables 
@@ -98,7 +88,7 @@ class PayableRepository implements PayableRepositoryInterface {
             $this->db->commit();
             return $id;
         }catch(Exception $e){
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -139,7 +129,7 @@ class PayableRepository implements PayableRepositoryInterface {
             return $result;
 
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -152,7 +142,7 @@ class PayableRepository implements PayableRepositoryInterface {
             $this->db->commit();
             return $result;
         } catch (Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
