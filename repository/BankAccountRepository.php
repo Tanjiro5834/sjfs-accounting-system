@@ -63,10 +63,6 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
 
     public function update(int $id, BankAccount $bankAccount): bool {
         try {
-            if (empty($bankAccount->account_name) || empty($bankAccount->bank_name)) {
-                throw new InvalidArgumentException("Missing required fields");
-            }
-
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare("

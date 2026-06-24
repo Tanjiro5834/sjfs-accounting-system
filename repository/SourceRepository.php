@@ -29,7 +29,20 @@ class SourceRepository implements SourceRepositoryInterface {
 
     public function findById(int $id): ?array {
         if (!$id) return null;
-        $stmt = $this->db->prepare("SELECT * FROM sources WHERE id = ?");
+        $stmt = $this->db->prepare("
+            SELECT s.*,
+                c.name   AS campus_name,
+                ct.code  AS type_code,
+                ct.name  AS type_name,
+                ba.account_name AS bank_name,
+                u.name   AS created_by_name
+            FROM sources s
+            JOIN campuses c          ON c.id  = s.campus_id
+            JOIN collection_types ct ON ct.id = s.collection_type_id
+            JOIN bank_accounts ba    ON ba.id  = s.bank_account_id
+            JOIN users u             ON u.id   = s.created_by
+            WHERE s.id = ?
+        ");
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -109,12 +122,6 @@ class SourceRepository implements SourceRepositoryInterface {
     }
 
     public function update(int $id, Source $source): bool {
-        if (empty($source->campus_id) || empty($source->collection_type_id) ||
-            empty($source->bank_account_id) || empty($source->amount) ||
-            empty($source->transaction_date)) {
-            throw new InvalidArgumentException("Missing required fields");
-        }
-
         try {
             $this->db->beginTransaction();
 

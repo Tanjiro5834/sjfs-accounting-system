@@ -71,11 +71,6 @@ class UserRepository implements UserRepositoryInterface {
     }
 
     public function update(int $id, User $user): bool {
-        if ($id <= 0) throw new InvalidArgumentException("Invalid user ID");
-        if (empty($user->name) || empty($user->email) || empty($user->role)) {
-            throw new InvalidArgumentException("Missing required fields");
-        }
-
         try {
             $this->db->beginTransaction();
 
@@ -105,8 +100,6 @@ class UserRepository implements UserRepositoryInterface {
     }
 
     public function deactivate(int $id): bool {
-        if ($id <= 0) throw new InvalidArgumentException("Invalid user ID");
-
         try {
             $this->db->beginTransaction();
             $stmt = $this->db->prepare("UPDATE users SET is_active = 0 WHERE id = ?");
