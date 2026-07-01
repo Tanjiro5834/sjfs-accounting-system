@@ -18,9 +18,9 @@ class PayableRequest {
 
     public function validate(): array {
         $errors = [];
-        if (empty($this->payee))            $errors[] = "Payee is required";
-        if (empty($this->bank_account_id))  $errors[] = "Bank account is required";
-        if ($this->amount <= 0)             $errors[] = "Amount must be greater than 0";
+        if (empty($this->payee)) $errors[] = "Payee is required";
+        if (empty($this->bank_account_id)) $errors[] = "Bank account is required";
+        if ($this->amount <= 0) $errors[] = "Amount must be greater than 0";
         if (empty($this->transaction_date)) $errors[] = "Transaction date is required";
         return $errors;
     }

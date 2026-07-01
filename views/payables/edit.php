@@ -38,8 +38,10 @@ $navItems = [
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon"><i class="ti ti-building-bank"></i></div>
-      <div class="brand-text"><strong>SJFS</strong><span>Cash Flow System</span></div>
+      <div class="brand-icon">
+        <img src="/sjfs/public/images/sjfs-removebg.png" alt="SJFS logo">
+      </div>
+      <div class="brand-text"><strong>St. John Fisher School</strong><span>Cash Flow System</span></div>
     </div>
     <div class="campus-badge">
       <i class="ti ti-map-pin"></i>

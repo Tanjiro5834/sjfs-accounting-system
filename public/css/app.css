@@ -1,5 +1,4 @@
-/* ─── TOKENS ─────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@100;300;400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 :root {
   --bg:         #F7F6F3;
   --surface:    #FFFFFF;
@@ -30,9 +29,9 @@
   --sidebar-w:  220px;
   --topbar-h:   56px;
   --transition: 0.18s ease;
-  --font:         'Lato', sans-serif;
-  --font-heading: 'Inter', sans-serif;
-  --font-mono:    'Lato', monospace;
+  --font:         'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
 }
 
 [data-theme="dark"] {
@@ -730,4 +729,10 @@ select.form-control { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }

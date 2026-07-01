@@ -3,6 +3,7 @@ class PayableResponse {
     public int $id;
     public string $payee;
     public ?string $check_number;
+    public int $bank_account_id;
     public string $bank_name;
     public float $amount;
     public string $transaction_date;
@@ -14,6 +15,7 @@ class PayableResponse {
         $this->id               = (int) $row['id'];
         $this->payee            = $row['payee'];
         $this->check_number     = $row['check_number'] ?? null;
+        $this->bank_account_id  = (int) $row['bank_account_id']; 
         $this->bank_name        = $row['bank_name'];
         $this->amount           = (float) $row['amount'];
         $this->transaction_date = $row['transaction_date'];

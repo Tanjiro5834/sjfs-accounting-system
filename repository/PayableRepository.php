@@ -19,7 +19,13 @@ class PayableRepository implements PayableRepositoryInterface {
     }
 
     public function findById(int $id): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM payables WHERE id = ?");
+        $stmt = $this->db->prepare("
+            SELECT p.*, ba.account_name AS bank_name, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE p.id = ?
+        ");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row !== false ? $row : null;
@@ -43,9 +49,12 @@ class PayableRepository implements PayableRepositoryInterface {
 
     public function findByBankAccount(int $bankAccountId): array {
         $stmt = $this->db->prepare("
-            SELECT * FROM payables 
-            WHERE bank_account_id = ?
-            ORDER BY transaction_date DESC
+            SELECT p.*, ba.account_name AS bank_name, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE p.bank_account_id = ?
+            ORDER BY p.transaction_date DESC
         ");
         $stmt->execute([$bankAccountId]);
         return $stmt->fetchAll();
@@ -62,7 +71,13 @@ class PayableRepository implements PayableRepositoryInterface {
     }
 
     public function findByCheckNumber(string $checkNumber): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM payables WHERE check_number = ?");
+        $stmt = $this->db->prepare("
+            SELECT p.*, ba.account_name AS bank_name, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE p.check_number = ?
+        ");
         $stmt->execute([$checkNumber]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row !== false ? $row : null;
@@ -95,14 +110,6 @@ class PayableRepository implements PayableRepositoryInterface {
 
    public function update(int $id, Payable $payable): bool {
         try {
-            if (empty($payable->payee)
-                || empty($payable->bank_account_id)
-                || empty($payable->amount)
-                || empty($payable->transaction_date)
-            ) {
-                throw new InvalidArgumentException("Missing required fields");
-            }
-
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare("
