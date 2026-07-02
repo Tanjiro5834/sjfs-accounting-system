@@ -7,10 +7,7 @@ class PayableService {
     private PayableRepositoryInterface $payableRepo;
     private AuditLogRepositoryInterface $auditRepo;
 
-    public function __construct(
-        PayableRepositoryInterface $payableRepo,
-        AuditLogRepositoryInterface $auditRepo
-    ) {
+    public function __construct(PayableRepositoryInterface $payableRepo, AuditLogRepositoryInterface $auditRepo) {
         $this->payableRepo = $payableRepo;
         $this->auditRepo   = $auditRepo;
     }
@@ -89,7 +86,7 @@ class PayableService {
     }
 
     public function update(int $id, array $data, int $updatedBy): bool {
-        if ($id <= 0)        throw new InvalidArgumentException("Invalid payable ID");
+        if ($id <= 0) throw new InvalidArgumentException("Invalid payable ID");
         if ($updatedBy <= 0) throw new InvalidArgumentException("Invalid user ID");
 
         $existing = $this->payableRepo->findById($id);

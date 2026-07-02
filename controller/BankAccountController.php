@@ -13,7 +13,7 @@ class BankAccountController {
     public function handle(): void {
         $action = $_GET['action'] ?? 'index';
 
-        match($action) {
+        match($action){
             'index'      => $this->index(),
             'create'     => $this->create(),
             'store'      => $this->store(),

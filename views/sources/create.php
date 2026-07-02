@@ -5,10 +5,10 @@ $currentAction = 'create';
 $user = currentUser();
 $campusMap = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 
-$db       = Database::getInstance()->getConnection();
+$db = Database::getInstance()->getConnection();
 $campuses = $db->query("SELECT * FROM campuses WHERE is_active = 1")->fetchAll();
-$types    = $db->query("SELECT * FROM collection_types WHERE is_active = 1")->fetchAll();
-$banks    = $db->query("SELECT * FROM bank_accounts WHERE is_active = 1 ORDER BY bank_name, account_name")->fetchAll();
+$types = $db->query("SELECT * FROM collection_types WHERE is_active = 1")->fetchAll();
+$banks = $db->query("SELECT * FROM bank_accounts WHERE is_active = 1 ORDER BY bank_name, account_name")->fetchAll();
 
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
@@ -21,6 +21,7 @@ $navItems = [
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -236,17 +237,20 @@ function validate() {
             ok = false;
         }
     });
+
     var amt = parseFloat(document.getElementById('amount').value);
     if (!amt || amt <= 0) {
         document.getElementById('amount').classList.add('error');
         document.getElementById('err-amount').classList.add('show');
         ok = false;
     }
+
     if (!document.getElementById('transaction_date').value) {
         document.getElementById('transaction_date').classList.add('error');
         document.getElementById('err-transaction_date').classList.add('show');
         ok = false;
     }
+
     return ok;
 }
 

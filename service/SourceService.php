@@ -7,10 +7,7 @@ class SourceService {
     private SourceRepositoryInterface $sourceRepo;
     private AuditLogRepositoryInterface $auditRepo;
 
-    public function __construct(
-        SourceRepositoryInterface $sourceRepo,
-        AuditLogRepositoryInterface $auditRepo
-    ) {
+    public function __construct(SourceRepositoryInterface $sourceRepo, AuditLogRepositoryInterface $auditRepo) {
         $this->sourceRepo = $sourceRepo;
         $this->auditRepo  = $auditRepo;
     }
@@ -86,7 +83,7 @@ class SourceService {
     }
 
     public function update(int $id, array $data, int $updatedBy): bool {
-        if ($id <= 0)        throw new InvalidArgumentException("Invalid source ID");
+        if ($id <= 0) throw new InvalidArgumentException("Invalid source ID");
         if ($updatedBy <= 0) throw new InvalidArgumentException("Invalid user ID");
 
         $existing = $this->sourceRepo->findById($id);

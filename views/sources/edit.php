@@ -1,20 +1,17 @@
 <?php
-// $source is a SourceResponse object — passed from SourceController::edit()
-// We need raw IDs for pre-selecting dropdowns, fetch from DB directly
-$db       = Database::getInstance()->getConnection();
+$db = Database::getInstance()->getConnection();
 $campuses = $db->query("SELECT * FROM campuses WHERE is_active = 1")->fetchAll();
-$types    = $db->query("SELECT * FROM collection_types WHERE is_active = 1")->fetchAll();
-$banks    = $db->query("SELECT * FROM bank_accounts WHERE is_active = 1 ORDER BY bank_name, account_name")->fetchAll();
+$types = $db->query("SELECT * FROM collection_types WHERE is_active = 1")->fetchAll();
+$banks = $db->query("SELECT * FROM bank_accounts WHERE is_active = 1 ORDER BY bank_name, account_name")->fetchAll();
 
-// Get raw row for IDs (SourceResponse doesn't expose FK IDs)
 $rawStmt = $db->prepare("SELECT * FROM sources WHERE id = ?");
 $rawStmt->execute([$source->id]);
 $raw = $rawStmt->fetch(PDO::FETCH_ASSOC);
 
-$currentPage   = 'sources';
+$currentPage = 'sources';
 $currentAction = 'edit';
-$user          = currentUser();
-$campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
+$user = currentUser();
+$campusMap = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
@@ -26,6 +23,7 @@ $navItems = [
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">

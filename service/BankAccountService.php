@@ -7,10 +7,7 @@ class BankAccountService {
     private BankAccountRepositoryInterface $bankRepo;
     private AuditLogRepositoryInterface $auditRepo;
 
-    public function __construct(
-        BankAccountRepositoryInterface $bankRepo,
-        AuditLogRepositoryInterface $auditRepo
-    ) {
+    public function __construct(BankAccountRepositoryInterface $bankRepo, AuditLogRepositoryInterface $auditRepo) {
         $this->bankRepo  = $bankRepo;
         $this->auditRepo = $auditRepo;
     }

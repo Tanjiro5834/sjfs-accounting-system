@@ -1,11 +1,10 @@
 <?php
-// $payable is a PayableResponse object — passed from PayableController::edit()
-$currentPage   = 'payables';
+$currentPage = 'payables';
 $currentAction = 'edit';
-$user          = currentUser();
-$campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
+$user = currentUser();
+$campusMap = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 
-$bankRepo     = new BankAccountRepository();
+$bankRepo = new BankAccountRepository();
 $bankAccounts = $bankRepo->findAll();
 
 $navItems = [
@@ -19,6 +18,7 @@ $navItems = [
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -188,18 +188,18 @@ $navItems = [
 <script src="/sjfs/public/js/app.js"></script>
 <script>
 function submitUpdate(btn) {
-    const id              = document.getElementById('record-id').value;
-    const payee           = document.getElementById('payee').value.trim();
-    const check_number    = document.getElementById('check_number').value.trim();
-    const amount          = document.getElementById('amount').value.trim();
+    const id = document.getElementById('record-id').value;
+    const payee = document.getElementById('payee').value.trim();
+    const check_number = document.getElementById('check_number').value.trim();
+    const amount = document.getElementById('amount').value.trim();
     const bank_account_id = document.getElementById('bank_account_id').value;
     const transaction_date = document.getElementById('transaction_date').value;
-    const remarks         = document.getElementById('remarks').value.trim();
-    const errBox          = document.getElementById('form-error');
+    const remarks = document.getElementById('remarks').value.trim();
+    const errBox = document.getElementById('form-error');
 
     errBox.style.display = 'none';
 
-    if (!payee)            return showError('Payee is required.');
+    if (!payee) return showError('Payee is required.');
     if (!amount || +amount <= 0) return showError('Amount must be greater than 0.');
     if (!bank_account_id)  return showError('Please select a bank account.');
     if (!transaction_date) return showError('Transaction date is required.');

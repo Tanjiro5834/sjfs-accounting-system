@@ -4,7 +4,6 @@ $currentAction = 'create';
 $user          = currentUser();
 $campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 
-// Load bank accounts for the dropdown
 $bankRepo     = new BankAccountRepository();
 $bankAccounts = $bankRepo->findAll();
 

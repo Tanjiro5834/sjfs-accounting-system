@@ -1,8 +1,8 @@
 <?php
-$currentPage   = 'payables';
+$currentPage = 'payables';
 $currentAction = '';
-$user          = currentUser();
-$campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
+$user = currentUser();
+$campusMap = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
@@ -14,6 +14,7 @@ $navItems = [
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
 ];
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -235,6 +236,7 @@ function deletePayable(id, label) {
         window.location.reload();
     });
 }
+
 function exportCSV() {
     var rows = [['#','Date','Payee','Check #','Bank','Amount','Remarks','Logged by']];
     document.querySelectorAll('#payables-table tbody tr').forEach(function(tr, i) {
