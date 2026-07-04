@@ -10,4 +10,9 @@ interface PayableRepositoryInterface {
     public function update(int $id, Payable $payable): bool;
     public function delete(int $id): bool;
     public function getTotalByDateRange(string $dateFrom, string $dateTo): float;
+
+    //new
+    public function findAllByCampus(int $campusId): array;
+    public function findByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): array;
+    public function getTotalByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): float;
 }

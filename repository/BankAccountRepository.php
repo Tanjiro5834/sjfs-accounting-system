@@ -10,8 +10,10 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
 
     public function findAll(bool $activeOnly = true): array {
         $sql = "SELECT * FROM bank_accounts";
+
         if ($activeOnly) $sql .= " WHERE is_active = 1";
         $sql .= " ORDER BY bank_name, account_name";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -95,9 +97,7 @@ class BankAccountRepository implements BankAccountRepositoryInterface {
     public function deactivate(int $id): bool {
         try {
             $this->db->beginTransaction();
-            $stmt = $this->db->prepare("
-                UPDATE bank_accounts SET is_active = 0 WHERE id = ?
-            ");
+            $stmt = $this->db->prepare("UPDATE bank_accounts SET is_active = 0 WHERE id = ?");
             $result = $stmt->execute([$id]);
             $this->db->commit();
             return $result;

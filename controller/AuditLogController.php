@@ -7,9 +7,7 @@ class AuditController {
 
     public function __construct() {
         requireRole('admin', 'auditor');
-        $this->auditService = new AuditLogService(
-            new AuditLogRepository()
-        );
+        $this->auditService = new AuditLogService();
     }
 
     public function handle(): void {

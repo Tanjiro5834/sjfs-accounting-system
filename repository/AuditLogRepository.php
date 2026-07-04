@@ -33,10 +33,7 @@ class AuditLogRepository implements AuditLogRepositoryInterface{
             ORDER BY created_at DESC
         ");
         
-        $stmt->execute([
-            ':date_from' => $dateFrom,
-            ':date_to' => $dateTo
-        ]);
+        $stmt->execute([':date_from' => $dateFrom, ':date_to' => $dateTo]);
         
         return $stmt->fetchAll();
     }

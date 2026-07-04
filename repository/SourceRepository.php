@@ -190,4 +190,65 @@ class SourceRepository implements SourceRepositoryInterface {
         $stmt->execute($params);
         return (float) $stmt->fetchColumn();
     }
+
+    public function findAllByCampus(int $campusId): array {
+        $stmt = $this->db->prepare(
+            "SELECT s.*, 
+                    ct.code AS type_code, 
+                    ct.name AS type_name,
+                    ba.account_name AS bank_name,
+                    u.name AS created_by_name,
+                    c.name AS campus_name
+             FROM sources s
+             JOIN collection_types ct ON ct.id = s.collection_type_id
+             JOIN bank_accounts ba ON ba.id = s.bank_account_id
+             JOIN users u ON u.id = s.created_by
+             JOIN campuses c ON c.id = s.campus_id
+             WHERE s.campus_id = :campus_id 
+             ORDER BY s.transaction_date DESC"
+        );
+        $stmt->execute(['campus_id' => $campusId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+    
+    public function findByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): array {
+        $stmt = $this->db->prepare(
+            "SELECT s.*, 
+                    ct.code AS type_code, 
+                    ct.name AS type_name,
+                    ba.account_name AS bank_name,
+                    u.name AS created_by_name,
+                    c.name AS campus_name
+             FROM sources s
+             JOIN collection_types ct ON ct.id = s.collection_type_id
+             JOIN bank_accounts ba ON ba.id = s.bank_account_id
+             JOIN users u ON u.id = s.created_by
+             JOIN campuses c ON c.id = s.campus_id
+             WHERE s.campus_id = :campus_id 
+               AND s.transaction_date BETWEEN :date_from AND :date_to 
+             ORDER BY s.transaction_date DESC"
+        );
+        $stmt->execute([
+            'campus_id' => $campusId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+    
+    public function getTotalByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): float {
+        $stmt = $this->db->prepare(
+            "SELECT COALESCE(SUM(amount), 0) as total 
+             FROM sources 
+             WHERE campus_id = :campus_id 
+               AND transaction_date BETWEEN :date_from AND :date_to"
+        );
+        $stmt->execute([
+            'campus_id' => $campusId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (float) ($result['total'] ?? 0);
+    }
 }

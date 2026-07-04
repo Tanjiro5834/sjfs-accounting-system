@@ -33,9 +33,9 @@ class AuthController {
             return;
         }
 
-        $email    = trim($_POST['email']    ?? '');
+        $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
-        $role     = trim($_POST['role']     ?? '');
+        $role = trim($_POST['role'] ?? '');
 
         if (empty($email) || empty($password) || empty($role)) {
             $this->jsonError('All fields are required.');

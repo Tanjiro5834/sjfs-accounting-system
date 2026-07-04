@@ -22,10 +22,10 @@ $campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
-    ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant']],
+    ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant','cashier']],
     ['page'=>'banks','icon'=>'ti-building-bank','label'=>'Bank accounts','roles'=>['admin']],
     ['section'=>'Reports'],
-    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','accountant','auditor']],
+    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','check'=>fn() => can('reports','cashflow')],
     ['page'=>'reports','action'=>'reconciliation','icon'=>'ti-scale','label'=>'Reconciliation','roles'=>['admin','accountant','auditor']],
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
@@ -70,7 +70,7 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
           <div class="nav-section"><?= htmlspecialchars($item['section']) ?></div>
         <?php else: ?>
           <?php
-          if (!in_array($user['role'], $item['roles'], true)) continue;
+          if (!in_array($user['role'], $item['roles'] ?? [], true)) continue;
           $isActive = $currentPage === $item['page'] && (!isset($item['action']) || $currentAction === ($item['action'] ?? ''));
           $href = '/sjfs/?page=' . $item['page'];
           if (isset($item['action'])) $href .= '&action=' . $item['action'];
@@ -144,12 +144,12 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
         <div class="stat-card">
           <div class="stat-label">Camella campus</div>
           <div class="stat-value stat-neutral">₱<?= number_format($totalCamella, 2) ?></div>
-          <div class="stat-sub">TF + MR + BS</div>
+          <div class="stat-sub">Tuition Fee + Miscellaneous Fee + Bookstore</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">BNT campus</div>
           <div class="stat-value stat-neutral">₱<?= number_format($totalBNT, 2) ?></div>
-          <div class="stat-sub">TF + MR + BS</div>
+          <div class="stat-sub">Tuition Fee + Miscellaneous Fee + Bookstore</div>
         </div>
       </div>
 

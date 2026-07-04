@@ -9,12 +9,14 @@ $sourceRepo  = new SourceRepository();
 $payableRepo = new PayableRepository();
 $bankRepo    = new BankAccountRepository();
 
+$canViewPayables = can('payables', 'read');
+
 $totalSources   = $sourceRepo->getTotalByDateRange($dateFrom, $dateTo);
-$totalPayables  = $payableRepo->getTotalByDateRange($dateFrom, $dateTo);
+$totalPayables  = $canViewPayables ? $payableRepo->getTotalByDateRange($dateFrom, $dateTo) : 0;
 $netCashFlow    = $totalSources - $totalPayables;
 $bankSummary    = $bankRepo->getBalanceSummary($dateFrom, $dateTo);
 $recentSources  = array_slice($sourceRepo->findByDateRange($dateFrom, $dateTo), 0, 5);
-$recentPayables = array_slice($payableRepo->findByDateRange($dateFrom, $dateTo), 0, 5);
+$recentPayables = $canViewPayables ? array_slice($payableRepo->findByDateRange($dateFrom, $dateTo), 0, 5) : [];
 
 $currentPage   = 'dashboard';
 $currentAction = '';
@@ -22,10 +24,10 @@ $currentAction = '';
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
-    ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant']],
+    ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant','cashier']],
     ['page'=>'banks','icon'=>'ti-building-bank','label'=>'Bank accounts','roles'=>['admin']],
     ['section'=>'Reports'],
-    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','accountant','auditor']],
+    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','auditor']],
     ['page'=>'reports','action'=>'reconciliation','icon'=>'ti-scale','label'=>'Reconciliation','roles'=>['admin','accountant','auditor']],
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
@@ -63,7 +65,7 @@ $navItems = [
           <div class="nav-section"><?= $item['section'] ?></div>
         <?php else: ?>
           <?php
-          if (!in_array($user['role'], $item['roles'], true)) continue;
+          if (!in_array($user['role'], $item['roles'] ?? [], true)) continue;
           $isActive = $currentPage === $item['page'] && (!isset($item['action']) || $currentAction === ($item['action'] ?? ''));
           $href = '/sjfs/?page=' . $item['page'];
           if (isset($item['action'])) $href .= '&action=' . $item['action'];
@@ -129,6 +131,8 @@ $navItems = [
             <div class="progress-fill" style="width:<?= $totalSources > 0 ? min(100, ($totalSources / max($totalSources, $totalPayables)) * 100) : 0 ?>%"></div>
           </div>
         </div>
+
+        <?php if ($canViewPayables): ?>
         <div class="stat-card">
           <div class="stat-label">Total cash out</div>
           <div class="stat-value stat-negative">₱<?= number_format($totalPayables, 2) ?></div>
@@ -144,6 +148,8 @@ $navItems = [
           </div>
           <div class="stat-sub"><?= $netCashFlow >= 0 ? 'Positive' : 'Negative' ?> this month</div>
         </div>
+        <?php endif; ?>
+
         <div class="stat-card">
           <div class="stat-label">Bank accounts</div>
           <div class="stat-value stat-neutral"><?= count($bankSummary) ?></div>
@@ -179,6 +185,7 @@ $navItems = [
           <?php endif; ?>
         </div>
 
+        <?php if ($canViewPayables): ?>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title">Recent cash out</div><div class="card-subtitle">Latest payable entries</div></div>
@@ -204,6 +211,7 @@ $navItems = [
             </div>
           <?php endif; ?>
         </div>
+        <?php endif; ?>
       </div>
 
       <!-- BANK BALANCE SUMMARY -->
@@ -221,7 +229,11 @@ $navItems = [
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Account</th><th>Bank</th><th>Opening</th><th>Cash in</th><th>Cash out</th><th>Ending balance</th></tr>
+                <tr>
+                  <th>Account</th><th>Bank</th><th>Opening</th><th>Cash in</th>
+                  <?php if ($canViewPayables): ?><th>Cash out</th><?php endif; ?>
+                  <th>Ending balance</th>
+                </tr>
               </thead>
               <tbody>
                 <?php foreach ($bankSummary as $b): ?>
@@ -230,7 +242,9 @@ $navItems = [
                     <td class="td-muted"><?= htmlspecialchars($b['bank_name']) ?></td>
                     <td class="td-mono">₱<?= number_format($b['opening_balance'], 2) ?></td>
                     <td class="td-mono amount-positive">+₱<?= number_format($b['total_sources'], 2) ?></td>
-                    <td class="td-mono amount-negative">-₱<?= number_format($b['total_payables'], 2) ?></td>
+                    <?php if ($canViewPayables): ?>
+                      <td class="td-mono amount-negative">-₱<?= number_format($b['total_payables'], 2) ?></td>
+                    <?php endif; ?>
                     <td class="td-mono">
                       <span class="<?= $b['ending_balance'] >= 0 ? 'amount-positive' : 'amount-negative' ?>">
                         ₱<?= number_format($b['ending_balance'], 2) ?>

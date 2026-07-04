@@ -1,16 +1,23 @@
 <?php
 require_once __DIR__ . '/../service/PayableService.php';
 require_once __DIR__ . '/../repository/PayableRepository.php';
+require_once __DIR__ . '/../repository/AuditLogRepository.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class PayableController {
     private PayableService $payableService;
 
     public function __construct() {
-        requireRole('admin', 'accountant');
+        
+        if (!can('payables', 'read')) {
+            throw new Exception('Access denied');
+        }
+        
+        $db = Database::getInstance()->getConnection();
         $this->payableService = new PayableService(
-            new PayableRepository(),
-            new AuditLogRepository()
+            new PayableRepository($db),
+            new AuditLogRepository($db)
         );
     }
 
@@ -29,25 +36,41 @@ class PayableController {
     }
 
     private function index(): void {
+        $campusId = getUserCampusId();
+        $user = currentUser(); 
+        $role = $user['role'] ?? ''; 
+
         $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
         $dateTo   = $_GET['date_to']   ?? date('Y-m-d');
-
-        try {
+        
+        if ($campusId) {
+            $payables = $this->payableService->getByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
+            $total = $this->payableService->getTotalByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
+        } else {
             $payables = $this->payableService->getByDateRange($dateFrom, $dateTo);
-            $total    = $this->payableService->getTotalByDateRange($dateFrom, $dateTo);
-            require_once __DIR__ . '/../views/payables/index.php';
-        } catch (Exception $e) {
-            $this->handleError($e);
+            $total = $this->payableService->getTotalByDateRange($dateFrom, $dateTo);
         }
+
+
+        $canEdit = can('payables', 'update');
+        $canDelete = $role === 'admin'; // Only admin can delete
+        $canCreate = can('payables', 'create');
+        $isReadOnly = $role === 'auditor';
+        
+        require_once __DIR__ . '/../views/payables/index.php';
     }
 
     private function create(): void {
+        if (!can('payables', 'create')) {
+            throw new Exception('Access denied');
+        }
+        
         require_once __DIR__ . '/../views/payables/create.php';
     }
 
     private function store(): void {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonError('Method not allowed', 405);
+        if (!can('payables', 'create')) {
+            $this->jsonError('Access denied', 403);
             return;
         }
 
@@ -62,12 +85,23 @@ class PayableController {
     }
 
     private function edit(): void {
+        if (!can('payables', 'update')) {
+            throw new Exception('Access denied');
+        }
+
         $id = (int) ($_GET['id'] ?? 0);
         if ($id <= 0) { $this->redirect('payables'); return; }
 
         try {
             $payable = $this->payableService->getById($id);
-            if (!$payable) { $this->redirect('payables'); return; }
+            if (!$payable || !is_array($payable)) { $this->redirect('payables'); return; }
+            
+            $campusId = getUserCampusId();
+            if ($campusId && isset($payable['campus_id']) && 
+                $payable['campus_id'] !== $campusId) {
+                throw new Exception('You can only edit payables from your campus');
+            }
+            
             require_once __DIR__ . '/../views/payables/edit.php';
         } catch (Exception $e) {
             $this->handleError($e);
@@ -80,10 +114,31 @@ class PayableController {
             return;
         }
 
-        $id = (int) ($_POST['id'] ?? 0);
-        if ($id <= 0) { $this->jsonError('Invalid payable ID.'); return; }
+        if (!can('payables', 'update')) {
+            $this->jsonError('Access denied', 403);
+            return;
+        }
 
         try {
+            $id = (int) ($_POST['id'] ?? 0);
+            if ($id <= 0){
+                $this->jsonError('Invalid payable ID.'); 
+                return; 
+            }
+
+            $payable = $this->payableService->getById($id);
+            if (!$payable || !is_array($payable)) {
+                $this->jsonError('Payable not found', 404);
+                return;
+            }
+
+            $campusId = getUserCampusId();
+            if ($campusId && isset($payable['campus_id']) && 
+                $payable['campus_id'] !== $campusId) {
+                $this->jsonError('You can only update payables from your campus', 403);
+                return;
+            }
+
             $this->payableService->update($id, $_POST, currentUser()['id']);
             $this->jsonSuccess(['message' => 'Payable entry updated successfully.']);
         } catch (InvalidArgumentException $e) {
@@ -101,10 +156,25 @@ class PayableController {
             return;
         }
 
-        $id = (int) ($_POST['id'] ?? 0);
-        if ($id <= 0) { $this->jsonError('Invalid payable ID.'); return; }
+        // Only admin can delete
+        if (!hasRole('admin')) {
+            $this->jsonError('Only administrators can delete financial records', 403);
+            return;
+        }
 
         try {
+            $id = (int) ($_POST['id'] ?? 0);
+            if ($id <= 0) { 
+                $this->jsonError('Invalid payable ID.'); 
+                return; 
+            }
+            
+            $payable = $this->payableService->getById($id);
+            if (!$payable) {
+                $this->jsonError('Payable not found', 404);
+                return;
+            }
+
             $this->payableService->delete($id, currentUser()['id']);
             $this->jsonSuccess(['message' => 'Payable entry deleted.']);
         } catch (RuntimeException $e) {
@@ -112,6 +182,11 @@ class PayableController {
         } catch (Exception $e) {
             $this->jsonError('Failed to delete payable entry.');
         }
+    }
+
+    private function isAjaxRequest(): bool {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     private function jsonSuccess(array $data = []): void {

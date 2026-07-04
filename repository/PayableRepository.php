@@ -1,9 +1,13 @@
 <?php
+require_once 'config/Database.php';
+require_once __DIR__ . '/../interfaces/PayableRepositoryInterface.php';
+require_once __DIR__ . '/../entity/Payable.php';
+
 class PayableRepository implements PayableRepositoryInterface {
     private PDO $db;
 
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+    public function __construct(PDO $db = null) {
+        $this->db = $db ?? Database::getInstance()->getConnection();
     }
 
     public function findAll(): array {
@@ -15,7 +19,7 @@ class PayableRepository implements PayableRepositoryInterface {
             ORDER BY p.transaction_date DESC, p.created_at DESC
         ");
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function findById(int $id): ?array {
@@ -44,7 +48,7 @@ class PayableRepository implements PayableRepositoryInterface {
             ':date_from' => $dateFrom,
             ':date_to'   => $dateTo,
         ]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function findByBankAccount(int $bankAccountId): array {
@@ -57,17 +61,21 @@ class PayableRepository implements PayableRepositoryInterface {
             ORDER BY p.transaction_date DESC
         ");
         $stmt->execute([$bankAccountId]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function findByPayee(string $payee): array {
         $stmt = $this->db->prepare("
-            SELECT * FROM payables 
-            WHERE payee LIKE ?
-            ORDER BY transaction_date DESC
+            SELECT p.*, ba.account_name AS bank_name, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE p.payee LIKE ?
+            ORDER BY p.transaction_date DESC
+            LIMIT 50
         ");
         $stmt->execute(['%' . $payee . '%']);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function findByCheckNumber(string $checkNumber): ?array {
@@ -84,12 +92,13 @@ class PayableRepository implements PayableRepositoryInterface {
     }
 
     public function save(Payable $payable): int {
-        try{
+        try {
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare("INSERT INTO payables 
             (payee, check_number, bank_account_id, amount, transaction_date, remarks, created_by) 
             VALUES (?, ?, ?, ?, ?, ?, ?)");
+
             $stmt->execute([
                 $payable->payee,
                 $payable->check_number,
@@ -97,18 +106,19 @@ class PayableRepository implements PayableRepositoryInterface {
                 $payable->amount,
                 $payable->transaction_date,
                 $payable->remarks,
-                $payable->created_by
+                $payable->created_by,
             ]);
+
             $id = (int) $this->db->lastInsertId();
             $this->db->commit();
             return $id;
-        }catch(Exception $e){
+        } catch (Exception $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
 
-   public function update(int $id, Payable $payable): bool {
+    public function update(int $id, Payable $payable): bool {
         try {
             $this->db->beginTransaction();
 
@@ -162,5 +172,53 @@ class PayableRepository implements PayableRepositoryInterface {
         ");
         $stmt->execute([$dateFrom, $dateTo]);
         return (float) $stmt->fetchColumn();
+    }
+
+    public function findAllByCampus(int $campusId): array {
+        $stmt = $this->db->prepare("
+            SELECT p.*, ba.account_name AS bank_name, ba.campus_id, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE ba.campus_id = :campus_id
+            ORDER BY p.transaction_date DESC, p.created_at DESC
+        ");
+        $stmt->execute(['campus_id' => $campusId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+    
+    public function findByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): array {
+        $stmt = $this->db->prepare("
+            SELECT p.*, ba.account_name AS bank_name, ba.campus_id, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE ba.campus_id = :campus_id
+            AND p.transaction_date BETWEEN :date_from AND :date_to
+            ORDER BY p.transaction_date DESC
+        ");
+        $stmt->execute([
+            'campus_id' => $campusId,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function getTotalByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): float {
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(SUM(p.amount), 0) as total
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            WHERE ba.campus_id = :campus_id
+            AND p.transaction_date BETWEEN :date_from AND :date_to
+        ");
+        $stmt->execute([
+            'campus_id' => $campusId,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (float) ($result['total'] ?? 0);
     }
 }

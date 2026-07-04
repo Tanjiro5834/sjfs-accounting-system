@@ -54,6 +54,11 @@ require_once __DIR__ . '/dto/response/PayableResponse.php';
 require_once __DIR__ . '/dto/response/BankAccountResponse.php';
 require_once __DIR__ . '/dto/response/AuditLogResponse.php';
 
+require_once __DIR__ . '/interfaces/ReportStrategyInterface.php';
+require_once __DIR__ . '/strategies/CashFlowReportStrategy.php';
+require_once __DIR__ . '/strategies/ReconciliationReportStrategy.php';
+require_once __DIR__ . '/controller/ReportsController.php';
+
 // ─── ROUTING ─────────────────────────────────────
 $page        = $_GET['page'] ?? 'login';
 $publicPages = ['login'];
@@ -69,5 +74,9 @@ match($page) {
     'payables'  => (new PayableController())->handle(),
     'banks'     => (new BankAccountController())->handle(),
     'audit'     => (new AuditController())->handle(),
+    'reports' => (new ReportsController(
+        new CashFlowReportStrategy(new SourceRepository(), new PayableRepository()),
+        new ReconciliationReportStrategy(new BankAccountRepository())
+    ))->handle(),
     default     => require 'views/404.php'
 };

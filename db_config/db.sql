@@ -85,3 +85,28 @@ CREATE TABLE audit_log (
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE INDEX idx_bank_accounts_campus_id ON bank_accounts (campus_id);      -- FK
+
+CREATE INDEX idx_sources_campus_date        ON sources (campus_id, transaction_date DESC);
+CREATE INDEX idx_sources_collection_type_id ON sources (collection_type_id);  -- FK
+CREATE INDEX idx_sources_bank_account_id    ON sources (bank_account_id);    -- FK
+
+CREATE INDEX idx_payables_payee_date       ON payables (payee, transaction_date DESC);
+CREATE INDEX idx_payables_bank_account_id  ON payables (bank_account_id);   -- FK
+
+CREATE INDEX idx_audit_log_user_id    ON audit_log (user_id);     -- FK
+CREATE INDEX idx_audit_log_module     ON audit_log (module);      -- filtered often in reports
+CREATE INDEX idx_audit_log_created_at ON audit_log (created_at);  -- if sorted/filtered by date alone
+
+ALTER TABLE users MODIFY role ENUM('admin','accountant','cashier','auditor') NOT NULL;
+
+-- Add campus_id column to payables table
+ALTER TABLE payables ADD COLUMN campus_id TINYINT NOT NULL;
+
+CREATE INDEX idx_payables_campus_id ON payables (campus_id);
+
+-- Update existing records with campus_id from bank_accounts
+UPDATE payables p 
+INNER JOIN bank_accounts ba ON ba.id = p.bank_account_id
+SET p.campus_id = ba.campus_id;
