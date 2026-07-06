@@ -31,10 +31,16 @@ class SourceController {
         $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
         $dateTo   = $_GET['date_to']   ?? date('Y-m-d');
         $campusId = $_GET['campus_id'] ?? null;
+        $pageNum  = max(1, (int) ($_GET['p'] ?? 1));
 
         try {
-            $sources = $this->sourceService->getByDateRange($dateFrom, $dateTo);
-            $total   = $this->sourceService->getTotalByDateRange($dateFrom, $dateTo, $campusId ? (int) $campusId : null);
+            $result         = $this->sourceService->getByDateRangePaginated(
+                $dateFrom, $dateTo, $pageNum, 20, $campusId ? (int) $campusId : null
+            );
+            $sources        = $result['data'];
+            $currentPageNum = $result['page'];
+            $totalPages     = $result['total_pages'];
+            $total          = $this->sourceService->getTotalByDateRange($dateFrom, $dateTo, $campusId ? (int) $campusId : null);
             require_once __DIR__ . '/../views/sources/index.php';
         } catch (Exception $e) {
             $this->handleError($e);

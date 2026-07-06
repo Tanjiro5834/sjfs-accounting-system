@@ -67,7 +67,7 @@ class BankAccountService {
             'module'    => 'BANKS',
             'record_id' => $id,
             'old_value' => null,
-            'new_value' => json_encode($bank->toArray()),
+            'new_value' => $bank->toArray(), 
         ]));
 
         return $id;
@@ -101,8 +101,8 @@ class BankAccountService {
             'action'    => 'UPDATE',
             'module'    => 'BANKS',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
-            'new_value' => json_encode($bank->toArray()),
+            'old_value' => $existing,
+            'new_value' => $bank->toArray(), 
         ]));
 
         return $result;
@@ -114,7 +114,7 @@ class BankAccountService {
 
         $existing = $this->bankRepo->findById($id);
         if (!$existing) throw new RuntimeException("Bank account with ID {$id} not found");
-        if ($existing['is_active'] === 0) throw new RuntimeException("Bank account already inactive");
+        if ((int) $existing['is_active'] === 0) throw new RuntimeException("Bank account already inactive");
 
         $result = $this->bankRepo->deactivate($id);
 
@@ -123,7 +123,7 @@ class BankAccountService {
             'action'    => 'DELETE',
             'module'    => 'BANKS',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
+            'old_value' => $existing,
             'new_value' => null,
         ]));
 
@@ -137,5 +137,17 @@ class BankAccountService {
         if (strtotime($dateFrom) > strtotime($dateTo)) {
             throw new InvalidArgumentException("dateFrom cannot be after dateTo");
         }
+    }
+
+    public function getAllPaginated(int $page, int $perPage, bool $activeOnly = true): array {
+        $total = $this->bankRepo->countAll($activeOnly);
+        $rows  = $this->bankRepo->findAllPaginated($page, $perPage, $activeOnly);
+
+        return [
+            'data'        => empty($rows) ? [] : BankAccountResponse::fromArray($rows),
+            'total'       => $total,
+            'page'        => $page,
+            'total_pages' => (int) ceil($total / $perPage) ?: 1,
+        ];
     }
 }

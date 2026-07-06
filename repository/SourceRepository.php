@@ -251,4 +251,36 @@ class SourceRepository implements SourceRepositoryInterface {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (float) ($result['total'] ?? 0);
     }
+
+    public function findByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage, ?int $campusId = null): array {
+        $offset = ($page - 1) * $perPage;
+        $sql = "SELECT s.*, c.name AS campus_name, ct.code AS type_code, ct.name AS type_name,
+                    ba.bank_name, u.name AS created_by_name
+                FROM sources s
+                JOIN campuses c ON c.id = s.campus_id
+                JOIN collection_types ct ON ct.id = s.collection_type_id
+                JOIN bank_accounts ba ON ba.id = s.bank_account_id
+                JOIN users u ON u.id = s.created_by
+                WHERE s.transaction_date BETWEEN :from AND :to";
+        if ($campusId) $sql .= " AND s.campus_id = :campus_id";
+        $sql .= " ORDER BY s.transaction_date DESC, s.id DESC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':from', $dateFrom);
+        $stmt->bindValue(':to', $dateTo);
+        if ($campusId) $stmt->bindValue(':campus_id', $campusId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countByDateRange(string $dateFrom, string $dateTo, ?int $campusId = null): int {
+        $sql = "SELECT COUNT(*) FROM sources WHERE transaction_date BETWEEN ? AND ?";
+        $params = [$dateFrom, $dateTo];
+        if ($campusId) { $sql .= " AND campus_id = ?"; $params[] = $campusId; }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
 }

@@ -26,8 +26,13 @@ class BankAccountController {
     }
 
     private function index(): void {
+        $pageNum = max(1, (int) ($_GET['p'] ?? 1));
+
         try {
-            $accounts = $this->bankService->getAll();
+            $result         = $this->bankService->getAllPaginated($pageNum, 20);
+            $accounts       = $result['data'];
+            $currentPageNum = $result['page'];
+            $totalPages     = $result['total_pages'];
             require_once __DIR__ . '/../views/banks/index.php';
         } catch (Exception $e) {
             $this->handleError($e);

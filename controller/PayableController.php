@@ -37,26 +37,30 @@ class PayableController {
 
     private function index(): void {
         $campusId = getUserCampusId();
-        $user = currentUser(); 
-        $role = $user['role'] ?? ''; 
+        $user = currentUser();
+        $role = $user['role'] ?? '';
 
         $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
         $dateTo   = $_GET['date_to']   ?? date('Y-m-d');
-        
+        $pageNum  = max(1, (int) ($_GET['p'] ?? 1));
+
         if ($campusId) {
-            $payables = $this->payableService->getByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
-            $total = $this->payableService->getTotalByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
+            $result = $this->payableService->getByDateRangeAndCampusPaginated($dateFrom, $dateTo, $campusId, $pageNum, 20);
+            $total  = $this->payableService->getTotalByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
         } else {
-            $payables = $this->payableService->getByDateRange($dateFrom, $dateTo);
-            $total = $this->payableService->getTotalByDateRange($dateFrom, $dateTo);
+            $result = $this->payableService->getByDateRangePaginated($dateFrom, $dateTo, $pageNum, 20);
+            $total  = $this->payableService->getTotalByDateRange($dateFrom, $dateTo);
         }
 
+        $payables       = $result['data'];
+        $currentPageNum = $result['page'];
+        $totalPages     = $result['total_pages'];
 
-        $canEdit = can('payables', 'update');
-        $canDelete = $role === 'admin'; // Only admin can delete
-        $canCreate = can('payables', 'create');
+        $canEdit    = can('payables', 'update');
+        $canDelete  = $role === 'admin';
+        $canCreate  = can('payables', 'create');
         $isReadOnly = $role === 'auditor';
-        
+
         require_once __DIR__ . '/../views/payables/index.php';
     }
 

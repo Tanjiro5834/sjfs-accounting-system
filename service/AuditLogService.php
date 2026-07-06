@@ -10,12 +10,7 @@ class AuditLogService {
     }
 
     public function getAll(): array {
-        try {
-            $auditLogs = $this->auditRepo->findAll();
-            return ['success' => true, 'data' => $auditLogs];
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
+        return $this->auditRepo->findAll();
     }
 
     public function getByUser(int $userId): array {
@@ -57,5 +52,18 @@ class AuditLogService {
         } catch (Exception $e) {
             throw new RuntimeException("Audit log failed: " . $e->getMessage(), 0, $e);
         }
+    }
+
+    public function getAllPaginated(int $page = 1, int $perPage = 20): array {
+        $total = $this->auditRepo->countAll();
+        $data  = $this->auditRepo->findAllPaginated($page, $perPage);
+
+        return [
+            'data'        => $data,
+            'total'       => $total,
+            'page'        => $page,
+            'per_page'    => $perPage,
+            'total_pages' => (int) ceil($total / $perPage),
+        ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 // views/audit/index.php
-// Expects: $logs = ['success' => bool, 'data' => array, 'error'?: string]
+// Expects: $logs (array of rows), $currentPageNum, $totalPages — set by AuditController::index()
 
 $pageTitle     = 'Audit Trail — SJFS';
 $currentPage   = 'audit';
@@ -20,7 +20,7 @@ $navItems = [
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
 ];
 
-$rows = $logs['success'] ? $logs['data'] : [];
+$rows = $logs;
 
 $actionBadge = [
     'CREATE' => 'badge-success',
@@ -38,7 +38,7 @@ $actionBadge = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="/sjfs/public/css/app.css">
+<link rel="stylesheet" href="/sjfs/public/css/app.css?v=1">
 <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_theme') || 'light');</script>
 </head>
 <body>
@@ -134,13 +134,6 @@ $actionBadge = [
         <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-filter"></i> Filter</button>
       </form>
 
-      <?php if (!$logs['success']): ?>
-        <div class="alert alert-danger">
-          <i class="ti ti-alert-circle"></i>
-          <span><?= htmlspecialchars($logs['error'] ?? 'Failed to load audit logs.') ?></span>
-        </div>
-      <?php endif; ?>
-
       <div class="card animate-in">
         <div class="card-header"><span class="card-title">Activity Log</span></div>
         <div class="table-wrap">
@@ -157,7 +150,7 @@ $actionBadge = [
               <?php else: ?>
                 <?php foreach ($rows as $log): ?>
                   <tr>
-                    <td class="td-mono"><?= htmlspecialchars($log['created_at']) ?></td>
+                    <td class="td-mono"><?= date('F j, Y g:i A', strtotime($log['created_at'])) ?></td>
                     <td><?= htmlspecialchars($log['user_id']) ?></td>
                     <td>
                       <span class="badge <?= $actionBadge[$log['action']] ?? 'badge-neutral' ?>">
@@ -181,6 +174,47 @@ $actionBadge = [
             </tbody>
           </table>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 4px;font-size:12px;color:var(--muted)">
+            <span>Page <?= $currentPageNum ?> of <?= $totalPages ?></span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <a href="?page=audit&p=<?= max(1, $currentPageNum - 1) ?>"
+                class="btn btn-sm"
+                style="<?= $currentPageNum <= 1 ? 'pointer-events:none;opacity:.4' : '' ?>">
+                <i class="ti ti-chevron-left"></i>
+              </a>
+
+              <?php
+              $range = 2; // pages shown on each side of current
+              $start = max(1, $currentPageNum - $range);
+              $end   = min($totalPages, $currentPageNum + $range);
+
+              if ($start > 1): ?>
+                <a href="?page=audit&p=1" class="btn btn-sm">1</a>
+                <?php if ($start > 2): ?><span>…</span><?php endif; ?>
+              <?php endif;
+
+              for ($i = $start; $i <= $end; $i++): ?>
+                <a href="?page=audit&p=<?= $i ?>"
+                  class="btn btn-sm <?= $i === $currentPageNum ? 'btn-primary' : '' ?>">
+                  <?= $i ?>
+                </a>
+              <?php endfor;
+
+              if ($end < $totalPages): ?>
+                <?php if ($end < $totalPages - 1): ?><span>…</span><?php endif; ?>
+                <a href="?page=audit&p=<?= $totalPages ?>" class="btn btn-sm"><?= $totalPages ?></a>
+              <?php endif; ?>
+
+              <a href="?page=audit&p=<?= min($totalPages, $currentPageNum + 1) ?>"
+                class="btn btn-sm"
+                style="<?= $currentPageNum >= $totalPages ? 'pointer-events:none;opacity:.4' : '' ?>">
+                <i class="ti ti-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+        <?php endif; ?>
       </div>
 
     </main>
@@ -212,11 +246,50 @@ $actionBadge = [
 <script>
 document.querySelectorAll('.view-diff').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        document.getElementById('diff-old').textContent = this.dataset.old;
-        document.getElementById('diff-new').textContent = this.dataset.new;
+        const oldObj = this.dataset.old !== 'null' ? JSON.parse(this.dataset.old) : null;
+        const newObj = this.dataset.new !== 'null' ? JSON.parse(this.dataset.new) : null;
+
+        document.getElementById('diff-old').innerHTML = formatDiff(oldObj);
+        document.getElementById('diff-new').innerHTML = formatDiff(newObj);
         document.getElementById('diff-modal').style.display = 'flex';
     });
 });
+
+function formatDiff(obj) {
+    if (!obj) return '<em>—</em>';
+
+    const labels = {
+        campus_id: 'Campus',
+        collection_type_id: 'Collection type',
+        bank_account_id: 'Bank account',
+        account_name: 'Account name',
+        bank_name: 'Bank name',
+        account_number: 'Account number',
+        opening_balance: 'Opening balance',
+        amount: 'Amount',
+        payee: 'Payee',
+        check_number: 'Check number',
+        remarks: 'Remarks',
+        transaction_date: 'Date',
+        is_active: 'Status',
+    };
+
+    return Object.entries(obj)
+        .filter(([key]) => key !== 'id' && key !== 'created_by' && key !== 'created_at')
+        .map(([key, value]) => {
+            const label = labels[key] || key;
+            let display = value;
+            if (key.includes('amount') || key.includes('balance')) {
+                display = '₱' + parseFloat(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+            } else if (key === 'is_active') {
+                display = value == 1 ? 'Active' : 'Inactive';
+            } else if (value === null || value === '') {
+                display = '—';
+            }
+            return `<div style="margin-bottom:6px"><strong>${label}:</strong> ${display}</div>`;
+        })
+        .join('');
+}
 </script>
 </body>
 </html>

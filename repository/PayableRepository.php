@@ -221,4 +221,59 @@ class PayableRepository implements PayableRepositoryInterface {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (float) ($result['total'] ?? 0);
     }
+
+    public function findByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage): array {
+        $offset = ($page - 1) * $perPage;
+        $sql = "SELECT p.*, ba.bank_name, u.name AS created_by_name
+                FROM payables p
+                JOIN bank_accounts ba ON ba.id = p.bank_account_id
+                JOIN users u ON u.id = p.created_by
+                WHERE p.transaction_date BETWEEN :from AND :to
+                ORDER BY p.transaction_date DESC, p.id DESC
+                LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':from', $dateFrom);
+        $stmt->bindValue(':to', $dateTo);
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countByDateRange(string $dateFrom, string $dateTo): int {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM payables WHERE transaction_date BETWEEN ? AND ?");
+        $stmt->execute([$dateFrom, $dateTo]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): int {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            WHERE p.transaction_date BETWEEN ? AND ? AND ba.campus_id = ?
+        ");
+        $stmt->execute([$dateFrom, $dateTo, $campusId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function findByDateRangeAndCampusPaginated(string $dateFrom, string $dateTo, int $campusId, int $page, int $perPage): array {
+        $offset = ($page - 1) * $perPage;
+        $stmt = $this->db->prepare("
+            SELECT p.*, ba.bank_name, u.name AS created_by_name
+            FROM payables p
+            JOIN bank_accounts ba ON ba.id = p.bank_account_id
+            JOIN users u ON u.id = p.created_by
+            WHERE p.transaction_date BETWEEN :from AND :to AND ba.campus_id = :campus_id
+            ORDER BY p.transaction_date DESC, p.id DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':from', $dateFrom);
+        $stmt->bindValue(':to', $dateTo);
+        $stmt->bindValue(':campus_id', $campusId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

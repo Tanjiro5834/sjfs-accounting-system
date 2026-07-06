@@ -21,9 +21,8 @@ class PayableService {
             throw new Exception('Access denied');
         }
 
-        // ✅ Fix: Define $campusId
-        $campusId = getUserCampusId(); // Add this line
-        $rows = $campusId  // Change $campusFilter to $campusId
+        $campusId = getUserCampusId();
+        $rows = $campusId 
             ? $this->payableRepo->findAllByCampus($campusId)
             : $this->payableRepo->findAll();
             
@@ -124,7 +123,6 @@ class PayableService {
         
         // Cashiers and auditors can only create (no read-only check needed)
         // Just check if they have create permission
-
         $request = new PayableRequest($data);
         $errors  = $request->validate();
         if (!empty($errors)) {
@@ -162,7 +160,7 @@ class PayableService {
             'module'    => 'PAYABLES',
             'record_id' => $id,
             'old_value' => null,
-            'new_value' => json_encode($payable->toArray()),
+            'new_value' => $payable->toArray(),
         ]));
 
         return $id;
@@ -201,8 +199,8 @@ class PayableService {
             'action'    => 'UPDATE',
             'module'    => 'PAYABLES',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
-            'new_value' => json_encode($payable->toArray()),
+            'old_value' => $existing,
+            'new_value' => $payable->toArray(),
         ]));
 
         return $result;
@@ -227,16 +225,13 @@ class PayableService {
             'action'    => 'DELETE',
             'module'    => 'PAYABLES',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
+            'old_value' => $existing,
             'new_value' => null,
         ]));
 
         return $result;
     }
 
-    /**
-     * Get current user's campus ID
-     */
     private function getUserCampusId(): ?int {
         $user = currentUser();
         return $user['campus_id'] ?? null;
@@ -264,5 +259,29 @@ class PayableService {
                 throw new Exception('You can only access records from your campus');
             }
         }
+    }
+
+    public function getByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage): array {
+        $this->validateDateRange($dateFrom, $dateTo);
+        if (!can('payables', 'read')) throw new Exception('Access denied');
+        $total = $this->payableRepo->countByDateRange($dateFrom, $dateTo);
+        $rows  = $this->payableRepo->findByDateRangePaginated($dateFrom, $dateTo, $page, $perPage);
+        return $this->paginatedResult($rows, $total, $page, $perPage);
+    }
+
+    public function getByDateRangeAndCampusPaginated(string $dateFrom, string $dateTo, int $campusId, int $page, int $perPage): array {
+        $this->validateDateRange($dateFrom, $dateTo);
+        $total = $this->payableRepo->countByDateRangeAndCampus($dateFrom, $dateTo, $campusId);
+        $rows  = $this->payableRepo->findByDateRangeAndCampusPaginated($dateFrom, $dateTo, $campusId, $page, $perPage);
+        return $this->paginatedResult($rows, $total, $page, $perPage);
+    }
+
+    private function paginatedResult(array $rows, int $total, int $page, int $perPage): array {
+        return [
+            'data'        => empty($rows) ? [] : PayableResponse::fromArray($rows),
+            'total'       => $total,
+            'page'        => $page,
+            'total_pages' => (int) ceil($total / $perPage) ?: 1,
+        ];
     }
 }

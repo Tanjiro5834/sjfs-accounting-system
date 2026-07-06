@@ -8,4 +8,8 @@ interface BankAccountRepositoryInterface {
     public function deactivate(int $id): bool;
     public function getBalanceSummary(string $dateFrom, string $dateTo): array;
     public function getBalanceById(int $id, string $dateFrom, string $dateTo): array;
+
+    //new
+    public function findAllPaginated(int $page, int $perPage, bool $activeOnly = true): array;
+    public function countAll(bool $activeOnly = true): int;
 }

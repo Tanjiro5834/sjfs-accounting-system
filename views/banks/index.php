@@ -25,7 +25,7 @@ $navItems = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="/sjfs/public/css/app.css">
+<link rel="stylesheet" href="/sjfs/public/css/app.css?v=1">
 <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_theme') || 'light');</script>
 </head>
 <body>
@@ -179,9 +179,28 @@ $navItems = [
               </tbody>
             </table>
           </div>
+
+          <?php if ($totalPages > 1): ?>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+              <span>Page <?= $currentPageNum ?> of <?= $totalPages ?></span>
+              <div style="display:flex;gap:6px">
+                <?php $qs = fn($p) => http_build_query(array_merge($_GET, ['page' => 'banks', 'p' => $p])); ?>
+                <a href="/sjfs/?<?= $qs(max(1, $currentPageNum - 1)) ?>" class="btn btn-sm"
+                   style="<?= $currentPageNum <= 1 ? 'pointer-events:none;opacity:.4' : '' ?>">
+                  <i class="ti ti-chevron-left"></i>
+                </a>
+                <?php for ($i = max(1, $currentPageNum - 2); $i <= min($totalPages, $currentPageNum + 2); $i++): ?>
+                  <a href="/sjfs/?<?= $qs($i) ?>" class="btn btn-sm <?= $i === $currentPageNum ? 'btn-primary' : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                <a href="/sjfs/?<?= $qs(min($totalPages, $currentPageNum + 1)) ?>" class="btn btn-sm"
+                   style="<?= $currentPageNum >= $totalPages ? 'pointer-events:none;opacity:.4' : '' ?>">
+                  <i class="ti ti-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
-
     </main>
   </div>
 </div>

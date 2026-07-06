@@ -14,4 +14,7 @@ interface SourceRepositoryInterface {
     public function findAllByCampus(int $campusId): array;
     public function findByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): array;
     public function getTotalByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): float;
+
+    public function findByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage, ?int $campusId = null): array;
+    public function countByDateRange(string $dateFrom, string $dateTo, ?int $campusId = null): int;
 }

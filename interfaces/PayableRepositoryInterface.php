@@ -15,4 +15,9 @@ interface PayableRepositoryInterface {
     public function findAllByCampus(int $campusId): array;
     public function findByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): array;
     public function getTotalByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): float;
+
+    public function findByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage): array;
+    public function countByDateRange(string $dateFrom, string $dateTo): int;
+    public function findByDateRangeAndCampusPaginated(string $dateFrom, string $dateTo, int $campusId, int $page, int $perPage): array;
+    public function countByDateRangeAndCampus(string $dateFrom, string $dateTo, int $campusId): int;
 }

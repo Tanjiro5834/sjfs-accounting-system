@@ -7,9 +7,9 @@ $campusId  = $_GET['campus_id'] ?? null;
 $sourceRepo = new SourceRepository();
 $sources    = $sourceRepo->findByDateRange($dateFrom, $dateTo);
 
-if ($campusId) {
-    $sources = array_values(array_filter($sources, fn($s) => $s['campus_id'] == $campusId));
-}
+// if ($campusId) {
+//     $sources = array_values(array_filter($sources, fn($s) => $s['campus_id'] == $campusId));
+// }
 
 $total          = array_sum(array_column($sources, 'amount'));
 $totalCamella   = array_sum(array_column(array_filter($sources, fn($s) => $s['campus_name'] === 'Camella'), 'amount'));
@@ -25,7 +25,7 @@ $navItems = [
     ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant','cashier']],
     ['page'=>'banks','icon'=>'ti-building-bank','label'=>'Bank accounts','roles'=>['admin']],
     ['section'=>'Reports'],
-    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','check'=>fn() => can('reports','cashflow')],
+    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','accountant','auditor']],
     ['page'=>'reports','action'=>'reconciliation','icon'=>'ti-scale','label'=>'Reconciliation','roles'=>['admin','accountant','auditor']],
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
@@ -41,7 +41,7 @@ $navItems = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="/sjfs/public/css/app.css">
+<link rel="stylesheet" href="/sjfs/public/css/app.css?v=1">
 <script>
 document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_theme') || 'light');
 </script>
@@ -250,6 +250,29 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
               </tbody>
             </table>
           </div>
+
+          <?php if ($totalPages > 1): ?>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+              <span>Page <?= $currentPageNum ?> of <?= $totalPages ?></span>
+              <div style="display:flex;gap:6px">
+                <?php
+                $qs = fn($p) => http_build_query(array_merge($_GET, ['page' => 'sources', 'p' => $p]));
+                ?>
+                <a href="/sjfs/?<?= $qs(max(1, $currentPageNum - 1)) ?>" class="btn btn-sm"
+                  style="<?= $currentPageNum <= 1 ? 'pointer-events:none;opacity:.4' : '' ?>">
+                  <i class="ti ti-chevron-left"></i>
+                </a>
+                <?php for ($i = max(1, $currentPageNum - 2); $i <= min($totalPages, $currentPageNum + 2); $i++): ?>
+                  <a href="/sjfs/?<?= $qs($i) ?>" class="btn btn-sm <?= $i === $currentPageNum ? 'btn-primary' : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                <a href="/sjfs/?<?= $qs(min($totalPages, $currentPageNum + 1)) ?>" class="btn btn-sm"
+                  style="<?= $currentPageNum >= $totalPages ? 'pointer-events:none;opacity:.4' : '' ?>">
+                  <i class="ti ti-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          <?php endif; ?>
+
           <div style="display:flex;justify-content:flex-end;padding:12px 14px;border-top:1px solid var(--border)">
             <span style="font-size:13px;color:var(--muted);margin-right:16px">Total</span>
             <span class="td-mono amount-positive" style="font-size:15px;font-weight:600">₱<?= number_format($total, 2) ?></span>

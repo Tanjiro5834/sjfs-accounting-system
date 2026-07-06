@@ -75,8 +75,8 @@ class SourceService {
             'action'    => 'CREATE',
             'module'    => 'SOURCES',
             'record_id' => $id,
-            'old_value' => null,
-            'new_value' => json_encode($source->toArray()),
+            'old_value' => null,          
+            'new_value' => $source->toArray(), 
         ]));
 
         return $id;
@@ -111,8 +111,8 @@ class SourceService {
             'action'    => 'UPDATE',
             'module'    => 'SOURCES',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
-            'new_value' => json_encode($source->toArray()),
+            'old_value' => $existing,             
+            'new_value' => $source->toArray(), 
         ]));
 
         return $result;
@@ -132,7 +132,7 @@ class SourceService {
             'action'    => 'DELETE',
             'module'    => 'SOURCES',
             'record_id' => $id,
-            'old_value' => json_encode($existing),
+            'old_value' => $existing,
             'new_value' => null,
         ]));
 
@@ -146,5 +146,18 @@ class SourceService {
         if (strtotime($dateFrom) > strtotime($dateTo)) {
             throw new InvalidArgumentException("dateFrom cannot be after dateTo");
         }
+    }
+
+    public function getByDateRangePaginated(string $dateFrom, string $dateTo, int $page, int $perPage, ?int $campusId = null): array {
+        $this->validateDateRange($dateFrom, $dateTo);
+        $total = $this->sourceRepo->countByDateRange($dateFrom, $dateTo, $campusId);
+        $rows  = $this->sourceRepo->findByDateRangePaginated($dateFrom, $dateTo, $page, $perPage, $campusId);
+
+        return [
+            'data'        => $rows,
+            'total'       => $total,
+            'page'        => $page,
+            'total_pages' => (int) ceil($total / $perPage) ?: 1,
+        ];
     }
 }
