@@ -23,6 +23,7 @@ class SourceController {
             'edit'   => $this->edit(),
             'update' => $this->update(),
             'delete' => $this->delete(),
+            'export' => $this->export(),
             default  => $this->index()
         };
     }
@@ -118,6 +119,26 @@ class SourceController {
         } catch (Exception $e) {
             $this->jsonError('Failed to delete source entry.');
         }
+    }
+
+    private function export(): void {
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+        $dateTo   = $_GET['date_to']   ?? date('Y-m-d');
+        $campusId = $_GET['campus_id'] ?? null;
+
+        $sources = $this->sourceService->getByDateRange($dateFrom, $dateTo, $campusId ? (int) $campusId : null);
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="sources_' . $dateFrom . '_to_' . $dateTo . '.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputs($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['#', 'Date', 'Campus', 'Type', 'Bank', 'Amount', 'Remarks', 'Logged by']);
+        foreach ($sources as $i => $s) {
+            fputcsv($out, [$i + 1, $s->transaction_date, $s->campus_name, $s->type_code, $s->bank_name, $s->amount, $s->remarks ?? '', $s->created_by_name]);
+        }
+        fclose($out);
+        exit;
     }
 
     private function jsonSuccess(array $data = []): void {

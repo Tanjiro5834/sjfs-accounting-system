@@ -31,6 +31,7 @@ class PayableController {
             'edit'   => $this->edit(),
             'update' => $this->update(),
             'delete' => $this->delete(),
+            'export' => $this->export(),
             default  => $this->index()
         };
     }
@@ -186,6 +187,28 @@ class PayableController {
         } catch (Exception $e) {
             $this->jsonError('Failed to delete payable entry.');
         }
+    }
+
+    private function export(): void {
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+        $dateTo   = $_GET['date_to']   ?? date('Y-m-d');
+        $campusId = getUserCampusId();
+
+        $payables = $campusId
+            ? $this->payableService->getByDateRangeAndCampus($dateFrom, $dateTo, $campusId)
+            : $this->payableService->getByDateRange($dateFrom, $dateTo);
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="payables_' . $dateFrom . '_to_' . $dateTo . '.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputs($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['#', 'Date', 'Payee', 'Check #', 'Bank', 'Amount', 'Remarks', 'Logged by']);
+        foreach ($payables as $i => $p) {
+            fputcsv($out, [$i + 1, $p->transaction_date, $p->payee, $p->check_number ?? '', $p->bank_name, $p->amount, $p->remarks ?? '', $p->created_by_name]);
+        }
+        fclose($out);
+        exit;
     }
 
     private function isAjaxRequest(): bool {

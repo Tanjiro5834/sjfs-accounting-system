@@ -1,5 +1,6 @@
 <?php
-// controller/ReportsController.php
+require_once __DIR__ . '/../vendor/autoload.php';
+
 class ReportsController {
     private array $strategies;
 
@@ -34,11 +35,34 @@ class ReportsController {
             return;
         }
 
+        if (($_GET['format'] ?? '') === 'pdf') {
+            $this->renderPdf($action, $report, "{$action}-report_{$dateFrom}_to_{$dateTo}.pdf");
+            return;
+        }
+
         $viewMap = [
             'cashflow'       => __DIR__ . '/../views/reports/cashflow.php',
             'reconciliation' => __DIR__ . '/../views/reports/reconciliation.php',
         ];
 
         require $viewMap[$action];
+    }
+
+    private function renderPdf(string $action, array $report, string $filename): void {
+        $pdfViewMap = [
+            'cashflow'       => __DIR__ . '/../views/reports/pdf/cashflowreport.php',
+            'reconciliation' => __DIR__ . '/../views/reports/pdf/reconciliation.php',
+        ];
+
+        ob_start();
+        require $pdfViewMap[$action];
+        $html = ob_get_clean();
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
     }
 }

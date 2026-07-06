@@ -83,6 +83,7 @@ class SourceService {
     }
 
     public function update(int $id, array $data, int $updatedBy): bool {
+        if (!can('sources', 'update')) throw new Exception('Access denied');
         if ($id <= 0) throw new InvalidArgumentException("Invalid source ID");
         if ($updatedBy <= 0) throw new InvalidArgumentException("Invalid user ID");
 
@@ -119,6 +120,7 @@ class SourceService {
     }
 
     public function delete(int $id, int $deletedBy): bool {
+        if (!hasRole('admin')) throw new Exception('Only administrators can delete financial records');
         if ($id <= 0)        throw new InvalidArgumentException("Invalid source ID");
         if ($deletedBy <= 0) throw new InvalidArgumentException("Invalid user ID");
 

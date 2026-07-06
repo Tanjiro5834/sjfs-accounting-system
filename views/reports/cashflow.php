@@ -113,6 +113,11 @@ $navItems = [
           <h1>Cash Flow Report</h1>
           <p><?= htmlspecialchars($report['date_from']) ?> to <?= htmlspecialchars($report['date_to']) ?></p>
         </div>
+        <div class="page-header-right">
+          <a href="/sjfs/?page=reports&action=cashflow&format=pdf&date_from=<?= htmlspecialchars($report['date_from']) ?>&date_to=<?= htmlspecialchars($report['date_to']) ?>" class="btn btn-sm">
+            <i class="ti ti-file-download"></i> Export PDF
+          </a>
+        </div>
       </div>
 
       <!-- Filter -->

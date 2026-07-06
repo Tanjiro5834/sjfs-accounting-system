@@ -189,7 +189,9 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
             <div class="card-title">Source entries</div>
             <div class="card-subtitle"><?= date('M d', strtotime($dateFrom)) ?> — <?= date('M d, Y', strtotime($dateTo)) ?></div>
           </div>
-          <button class="btn btn-sm" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+          <a href="/sjfs/?page=sources&action=export&date_from=<?= htmlspecialchars($dateFrom) ?>&date_to=<?= htmlspecialchars($dateTo) ?><?= $campusId ? '&campus_id='.htmlspecialchars($campusId) : '' ?>" class="btn btn-sm">
+            <i class="ti ti-download"></i> Export CSV
+          </a>
         </div>
 
         <?php if (empty($sources)): ?>
@@ -292,19 +294,6 @@ function deleteSource(id, label) {
     confirmDelete('/sjfs/?page=sources&action=delete', id, label, function() {
         window.location.reload();
     });
-}
-function exportCSV() {
-    var rows = [['#','Date','Campus','Type','Bank','Amount','Remarks','Logged by']];
-    document.querySelectorAll('#sources-table tbody tr').forEach(function(tr, i) {
-        var c = tr.querySelectorAll('td');
-        rows.push([i+1, c[1].textContent.trim(), c[2].textContent.trim(), c[3].textContent.trim(),
-                   c[4].textContent.trim(), c[5].textContent.trim(), c[6].textContent.trim(), c[7].textContent.trim()]);
-    });
-    var csv  = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
-    var a    = document.createElement('a');
-    a.href   = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download = 'sources_<?= date('Y-m-d') ?>.csv';
-    a.click();
 }
 </script>
 </body>

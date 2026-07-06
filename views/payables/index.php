@@ -104,7 +104,7 @@ $navItems = [
           <p>Payable entries for <?= date('F Y') ?></p>
         </div>
         <div class="page-header-right">
-          <?php if (hasRole('admin', 'accountant')): ?>
+          <?php if (hasRole('admin', 'accountant', 'cashier')): ?>
             <a href="/sjfs/?page=payables&action=create" class="btn btn-primary">
               <i class="ti ti-plus"></i> Add entry
             </a>
@@ -159,7 +159,9 @@ $navItems = [
             <div class="card-title">Payable entries</div>
             <div class="card-subtitle"><?= date('M d', strtotime($dateFrom)) ?> — <?= date('M d, Y', strtotime($dateTo)) ?></div>
           </div>
-          <button class="btn btn-sm" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+          <a href="/sjfs/?page=payables&action=export&date_from=<?= htmlspecialchars($dateFrom) ?>&date_to=<?= htmlspecialchars($dateTo) ?>" class="btn btn-sm">
+            <i class="ti ti-download"></i> Export CSV
+          </a>
         </div>
 
         <?php if (empty($payables)): ?>
@@ -181,7 +183,7 @@ $navItems = [
                   <th>Amount</th>
                   <th>Remarks</th>
                   <th>Logged by</th>
-                  <?php if (hasRole('admin', 'accountant')): ?>
+                  <?php if (hasRole('admin', 'accountant', 'cashier')): ?>
                     <th>Actions</th>
                   <?php endif; ?>
                 </tr>
@@ -197,7 +199,7 @@ $navItems = [
                     <td class="td-mono amount-negative">₱<?= number_format($p->amount, 2) ?></td>
                     <td class="td-muted"><?= htmlspecialchars($p->remarks ?? '—') ?></td>
                     <td class="td-muted"><?= htmlspecialchars($p->created_by_name) ?></td>
-                    <?php if (hasRole('admin', 'accountant')): ?>
+                    <?php if (hasRole('admin', 'accountant', 'cashier')): ?>
                       <td>
                         <div style="display:flex;gap:4px">
                           <a href="/sjfs/?page=payables&action=edit&id=<?= $p->id ?>" class="icon-btn" title="Edit">
@@ -237,7 +239,7 @@ $navItems = [
               </div>
             </div>
           <?php endif; ?>
-          
+
           <div style="display:flex;justify-content:flex-end;padding:12px 14px;border-top:1px solid var(--border)">
             <span style="font-size:13px;color:var(--muted);margin-right:16px">Total</span>
             <span class="td-mono amount-negative" style="font-size:15px;font-weight:600">₱<?= number_format($total, 2) ?></span>
@@ -256,22 +258,6 @@ function deletePayable(id, label) {
     confirmDelete('/sjfs/?page=payables&action=delete', id, label, function() {
         window.location.reload();
     });
-}
-
-function exportCSV() {
-    var rows = [['#','Date','Payee','Check #','Bank','Amount','Remarks','Logged by']];
-    document.querySelectorAll('#payables-table tbody tr').forEach(function(tr, i) {
-        var c = tr.querySelectorAll('td');
-        rows.push([i+1, c[1].textContent.trim(), c[2].textContent.trim(), c[3].textContent.trim(),
-                   c[4].textContent.trim(), c[5].textContent.trim(), c[6].textContent.trim(), c[7].textContent.trim()]);
-    });
-    var csv = rows.map(function(r) {
-        return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
-    }).join('\n');
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download = 'payables_<?= date('Y-m-d') ?>.csv';
-    a.click();
 }
 </script>
 </body>
