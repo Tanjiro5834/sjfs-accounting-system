@@ -22,8 +22,12 @@
 </style>
 </head>
 <body>
-  <h1>St. John Fisher School — Cash Flow Report</h1>
-  <div class="subtitle"><?= htmlspecialchars($report['date_from']) ?> to <?= htmlspecialchars($report['date_to']) ?></div>
+  <?php $logoPath = realpath(__DIR__ . '/../../../public/images/sjfs-removebg.png'); ?>
+  <div style="text-align:center; margin-bottom:8px;">
+    <img src="<?= $logoPath ?>" style="height:40px; vertical-align:middle; margin-right:10px;">
+    <h1 style="display:inline-block; vertical-align:middle; margin:0;">St. John Fisher School — Cash Flow Report</h1>
+  </div>
+  <div class="subtitle"><?= htmlspecialchars(date('F j, Y', strtotime($report['date_from']))) ?> to <?= htmlspecialchars(date('F j, Y', strtotime($report['date_to']))) ?></div>
 
   <table class="stats">
     <tr>
@@ -60,7 +64,7 @@
       <?php else: ?>
         <?php foreach ($report['sources'] as $s): ?>
           <tr>
-            <td><?= htmlspecialchars($s['transaction_date']) ?></td>
+            <td><?= htmlspecialchars(date('F j, Y', strtotime($s['transaction_date']))) ?></td>
             <td><?= htmlspecialchars($s['campus_name'] ?? '') ?></td>
             <td><?= htmlspecialchars($s['type_code'] ?? '') ?></td>
             <td><?= htmlspecialchars($s['bank_name'] ?? '') ?></td>
@@ -81,7 +85,7 @@
       <?php else: ?>
         <?php foreach ($report['payables'] as $p): ?>
           <tr>
-            <td><?= htmlspecialchars($p['transaction_date']) ?></td>
+            <td><?= htmlspecialchars(date('F j, Y', strtotime($p['transaction_date']))) ?></td>
             <td><?= htmlspecialchars($p['payee']) ?></td>
             <td><?= htmlspecialchars($p['check_number'] ?? '') ?></td>
             <td class="negative">-₱<?= number_format($p['amount'], 2) ?></td>
@@ -92,6 +96,6 @@
     </tbody>
   </table>
 
-  <div style="margin-top:20px;font-size:9px;color:#9E9C96">Generated <?= date('F j, Y g:i A') ?></div>
+  <div style="margin-top:20px;font-size:9px;color:#9E9C96">Generated <?= date('F j, Y g:i a') ?></div>
 </body>
 </html>

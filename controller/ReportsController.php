@@ -58,7 +58,10 @@ class ReportsController {
         require $pdfViewMap[$action];
         $html = ob_get_clean();
 
-        $dompdf = new \Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->setChroot(realpath(__DIR__ . '/..'));
+
+        $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
