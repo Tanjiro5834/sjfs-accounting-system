@@ -7,25 +7,25 @@ $campusId  = $_GET['campus_id'] ?? null;
 $sourceRepo = new SourceRepository();
 $sources    = $sourceRepo->findByDateRange($dateFrom, $dateTo);
 
-// if ($campusId) {
-//     $sources = array_values(array_filter($sources, fn($s) => $s['campus_id'] == $campusId));
-// }
+$sources = $campusId
+    ? $sourceRepo->findByDateRangeAndCampus($dateFrom, $dateTo, (int) $campusId)
+    : $sourceRepo->findByDateRange($dateFrom, $dateTo);
 
-$total          = array_sum(array_column($sources, 'amount'));
-$totalCamella   = array_sum(array_column(array_filter($sources, fn($s) => $s['campus_name'] === 'Camella'), 'amount'));
-$totalBNT       = array_sum(array_column(array_filter($sources, fn($s) => $s['campus_name'] === 'BNT'), 'amount'));
+$total = array_sum(array_column($sources, 'amount'));
+$totalCamella = array_sum(array_column(array_filter($sources, fn($s) => $s['campus_name'] === 'Camella'), 'amount'));
+$totalBNT = array_sum(array_column(array_filter($sources, fn($s) => $s['campus_name'] === 'BNT'), 'amount'));
 
-$currentPage   = 'sources';
+$currentPage = 'sources';
 $currentAction = '';
-$user          = currentUser();
-$campusMap     = [1 => 'Camella Campus', 2 => 'BNT Campus'];
+$user = currentUser();
+$campusMap = [1 => 'Camella Campus', 2 => 'BNT Campus'];
 $navItems = [
     ['page'=>'dashboard','icon'=>'ti-layout-dashboard','label'=>'Dashboard','roles'=>['admin','accountant','cashier','auditor']],
     ['page'=>'sources','icon'=>'ti-arrow-bar-to-down','label'=>'Cash in','roles'=>['admin','accountant','cashier']],
     ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant','cashier']],
     ['page'=>'banks','icon'=>'ti-building-bank','label'=>'Bank accounts','roles'=>['admin']],
     ['section'=>'Reports'],
-    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','accountant','auditor']],
+    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','auditor']],
     ['page'=>'reports','action'=>'reconciliation','icon'=>'ti-scale','label'=>'Reconciliation','roles'=>['admin','accountant','auditor']],
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
@@ -49,7 +49,6 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
 <body>
 
 <div class="app-layout">
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">
@@ -209,6 +208,7 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
                   <th>Date</th>
                   <th>Campus</th>
                   <th>Type</th>
+                  <th>Source</th>
                   <th>Bank account</th>
                   <th>Amount</th>
                   <th>Remarks</th>
@@ -227,6 +227,13 @@ document.documentElement.setAttribute('data-theme', localStorage.getItem('sjfs_t
                     <td>
                       <span class="badge badge-success"><?= htmlspecialchars($s['type_code']) ?></span>
                       <span class="td-muted" style="margin-left:4px;font-size:11px"><?= htmlspecialchars($s['type_name']) ?></span>
+                    </td>
+                    <td>
+                      <?php if (!empty($s['source_type'])): ?>
+                        <span class="badge"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $s['source_type']))) ?></span>
+                      <?php else: ?>
+                        <span class="td-muted">—</span>
+                      <?php endif; ?>
                     </td>
                     <td class="td-muted"><?= htmlspecialchars($s['bank_name']) ?></td>
                     <td class="td-mono amount-positive">₱<?= number_format($s['amount'], 2) ?></td>

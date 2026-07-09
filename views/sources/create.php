@@ -169,6 +169,21 @@ $navItems = [
               <span class="form-error" id="err-bank_account_id">Bank account is required.</span>
             </div>
 
+            <?php if ($user['role'] === 'cashier'): ?>
+            <div class="form-group">
+              <label for="source_type">Payment source</label>
+              <select id="source_type" name="source_type" class="form-control">
+                <option value="">Select source</option>
+                <option value="cash">Cash</option>
+                <option value="gcash">GCash</option>
+                <option value="maya">Maya</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="check">Check</option>
+              </select>
+              <span class="form-error" id="err-source_type">Payment source is required.</span>
+            </div>
+            <?php endif; ?>
+
             <div class="form-group">
               <label for="amount">Amount (₱)</label>
               <div class="input-with-icon">
@@ -214,6 +229,7 @@ $navItems = [
 <script src="/sjfs/public/js/app.js"></script>
 <script>
 var required = ['campus_id','collection_type_id','bank_account_id','amount','transaction_date'];
+if (document.getElementById('source_type')) required.push('source_type');
 
 required.forEach(function(id) {
     var el = document.getElementById(id);
@@ -237,6 +253,13 @@ function validate() {
             ok = false;
         }
     });
+
+    var sourceTypeEl = document.getElementById('source_type');
+    if (sourceTypeEl && !sourceTypeEl.value) {
+        sourceTypeEl.classList.add('error');
+        document.getElementById('err-source_type').classList.add('show');
+        ok = false;
+    }
 
     var amt = parseFloat(document.getElementById('amount').value);
     if (!amt || amt <= 0) {

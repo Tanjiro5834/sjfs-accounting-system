@@ -58,10 +58,20 @@ class SourceService {
             throw new InvalidArgumentException(implode(', ', $errors));
         }
 
+        $sourceType = null;
+        if (hasRole('cashier')) {
+            $allowed = ['cash', 'gcash', 'maya', 'bank_transfer', 'check'];
+            if (empty($request->source_type) || !in_array($request->source_type, $allowed, true)) {
+                throw new InvalidArgumentException("Valid payment source is required");
+            }
+            $sourceType = $request->source_type;
+        }
+
         $source = new Source([
             'campus_id'          => $request->campus_id,
             'collection_type_id' => $request->collection_type_id,
             'bank_account_id'    => $request->bank_account_id,
+            'source_type'        => $sourceType,
             'amount'             => $request->amount,
             'transaction_date'   => $request->transaction_date,
             'remarks'            => $request->remarks,
@@ -96,10 +106,20 @@ class SourceService {
             throw new InvalidArgumentException(implode(', ', $errors));
         }
 
+        $sourceType = $existing['source_type'] ?? null;
+        if (hasRole('cashier')) {
+            $allowed = ['cash', 'gcash', 'maya', 'bank_transfer', 'check'];
+            if (empty($request->source_type) || !in_array($request->source_type, $allowed, true)) {
+                throw new InvalidArgumentException("Valid payment source is required");
+            }
+            $sourceType = $request->source_type;
+        }
+
         $source = new Source([
             'campus_id'          => $request->campus_id,
             'collection_type_id' => $request->collection_type_id,
             'bank_account_id'    => $request->bank_account_id,
+            'source_type'        => $sourceType,
             'amount'             => $request->amount,
             'transaction_date'   => $request->transaction_date,
             'remarks'            => $request->remarks,

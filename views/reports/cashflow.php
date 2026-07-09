@@ -14,7 +14,7 @@ $navItems = [
     ['page'=>'payables','icon'=>'ti-arrow-bar-up','label'=>'Cash out','roles'=>['admin','accountant','cashier']],
     ['page'=>'banks','icon'=>'ti-building-bank','label'=>'Bank accounts','roles'=>['admin']],
     ['section'=>'Reports'],
-    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','accountant','auditor']],
+    ['page'=>'reports','action'=>'cashflow','icon'=>'ti-chart-bar','label'=>'Cash flow','roles'=>['admin','auditor']],
     ['page'=>'reports','action'=>'reconciliation','icon'=>'ti-scale','label'=>'Reconciliation','roles'=>['admin','accountant','auditor']],
     ['section'=>'System'],
     ['page'=>'audit','icon'=>'ti-shield-check','label'=>'Audit trail','roles'=>['admin','auditor']],
@@ -111,7 +111,7 @@ $navItems = [
       <div class="page-header animate-in">
         <div class="page-header-left">
           <h1>Cash Flow Report</h1>
-          <p><?= htmlspecialchars($report['date_from']) ?> to <?= htmlspecialchars($report['date_to']) ?></p>
+          <p><?= date('F j, Y', strtotime($report['date_from'])) ?> to <?= date('F j, Y', strtotime($report['date_to'])) ?></p>
         </div>
         <div class="page-header-right">
           <a href="/sjfs/?page=reports&action=cashflow&format=pdf&date_from=<?= htmlspecialchars($report['date_from']) ?>&date_to=<?= htmlspecialchars($report['date_to']) ?>" class="btn btn-sm">
@@ -184,7 +184,7 @@ $navItems = [
               <?php else: ?>
                 <?php foreach ($report['sources'] as $s): ?>
                   <tr>
-                    <td><?= htmlspecialchars($s['transaction_date']) ?></td>
+                    <td><?= date('F j, Y', strtotime($s['transaction_date'])) ?></td>
                     <td><?= htmlspecialchars($s['campus_name'] ?? '') ?></td>
                     <td><?= htmlspecialchars($s['type_code'] ?? '') ?></td>
                     <td><?= htmlspecialchars($s['bank_name'] ?? '') ?></td>
@@ -210,7 +210,7 @@ $navItems = [
               <?php else: ?>
                 <?php foreach ($report['payables'] as $p): ?>
                   <tr>
-                    <td><?= htmlspecialchars($p['transaction_date']) ?></td>
+                    <td><?= date('F j, Y', strtotime($p['transaction_date'])) ?></td>
                     <td><?= htmlspecialchars($p['payee']) ?></td>
                     <td class="td-mono"><?= htmlspecialchars($p['check_number'] ?? '') ?></td>
                     <td class="amount amount-negative">-₱<?= number_format($p['amount'], 2) ?></td>

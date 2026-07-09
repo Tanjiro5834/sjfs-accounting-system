@@ -4,6 +4,7 @@ class SourceResponse {
     public string $campus_name;
     public string $type_code;
     public string $type_name;
+    public ?string $source_type;
     public string $bank_name;
     public float $amount;
     public string $transaction_date;
@@ -16,6 +17,7 @@ class SourceResponse {
         $this->campus_name      = $row['campus_name'];
         $this->type_code        = $row['type_code'];
         $this->type_name        = $row['type_name'];
+        $this->source_type      = $row['source_type'] ?? null;
         $this->bank_name        = $row['bank_name'];
         $this->amount           = (float) $row['amount'];
         $this->transaction_date = $row['transaction_date'];

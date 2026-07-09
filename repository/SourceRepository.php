@@ -98,13 +98,14 @@ class SourceRepository implements SourceRepositoryInterface {
             $stmt = $this->db->prepare("
                 INSERT INTO sources (
                     campus_id, collection_type_id, bank_account_id,
-                    amount, transaction_date, remarks, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    source_type, amount, transaction_date, remarks, created_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $source->campus_id,
                 $source->collection_type_id,
                 $source->bank_account_id,
+                $source->source_type,
                 $source->amount,
                 $source->transaction_date,
                 $source->remarks ?? null,
@@ -135,6 +136,7 @@ class SourceRepository implements SourceRepositoryInterface {
                     campus_id          = ?,
                     collection_type_id = ?,
                     bank_account_id    = ?,
+                    source_type        = ?,
                     amount             = ?,
                     transaction_date   = ?,
                     remarks            = ?
@@ -144,6 +146,7 @@ class SourceRepository implements SourceRepositoryInterface {
                 $source->campus_id,
                 $source->collection_type_id,
                 $source->bank_account_id,
+                $source->source_type,
                 $source->amount,
                 $source->transaction_date,
                 $source->remarks ?? null,
